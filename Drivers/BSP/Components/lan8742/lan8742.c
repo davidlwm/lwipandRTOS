@@ -96,19 +96,22 @@ int32_t  LAN8742_RegisterBusIO(lan8742_Object_t *pObj, lan8742_IOCtx_t *ioctx)
      /* for later check */
      pObj->DevAddr = LAN8742_MAX_DEV_ADDR + 1;
 
-     /* Get the device address from special mode register */
+     /* Get the device address by scanning for valid PHY ID */
+     /* Use standard IEEE 802.3 registers (compatible with YT8512C and LAN8742) */
      for(addr = 0; addr <= LAN8742_MAX_DEV_ADDR; addr ++)
      {
-       if(pObj->IO.ReadReg(addr, LAN8742_SMR, &regvalue) < 0)
+       /* Try to read PHY Identifier Register 1 (standard register 0x0002) */
+       if(pObj->IO.ReadReg(addr, LAN8742_PHYI1R, &regvalue) < 0)
        {
          status = LAN8742_STATUS_READ_ERROR;
-         /* Can't read from this device address
-            continue with next address */
+         /* Can't read from this device address, continue with next address */
          continue;
        }
 
-       if((regvalue & LAN8742_SMR_PHY_ADDR) == addr)
+       /* Check if we got a valid PHY ID (not 0x0000 or 0xFFFF) */
+       if((regvalue != 0x0000U) && (regvalue != 0xFFFFU))
        {
+         /* Found a valid PHY at this address */
          pObj->DevAddr = addr;
          status = LAN8742_STATUS_OK;
          break;
@@ -259,6 +262,7 @@ int32_t LAN8742_StartAutoNego(lan8742_Object_t *pObj)
 int32_t LAN8742_GetLinkState(lan8742_Object_t *pObj)
 {
   uint32_t readval = 0;
+  uint32_t phyid1 = 0;
 
   /* Read Status register  */
   if(pObj->IO.ReadReg(pObj->DevAddr, LAN8742_BSR, &readval) < 0)
@@ -305,32 +309,72 @@ int32_t LAN8742_GetLinkState(lan8742_Object_t *pObj)
   }
   else /* Auto Nego enabled */
   {
-    if(pObj->IO.ReadReg(pObj->DevAddr, LAN8742_PHYSCSR, &readval) < 0)
+    /* Detect PHY type by reading PHY ID1 register */
+    if(pObj->IO.ReadReg(pObj->DevAddr, LAN8742_PHYI1R, &phyid1) < 0)
     {
       return LAN8742_STATUS_READ_ERROR;
     }
 
-    /* Check if auto nego not done */
-    if((readval & LAN8742_PHYSCSR_AUTONEGO_DONE) == 0)
+    /* Check if this is YT8512C (PHY ID1 = 0x0000) or LAN8742 (PHY ID1 = 0x0007) */
+    if(phyid1 == 0x0000U)
     {
-      return LAN8742_STATUS_AUTONEGO_NOTDONE;
-    }
+      /* YT8512C: Use register 0x0011 for speed/duplex status */
+      if(pObj->IO.ReadReg(pObj->DevAddr, YT8512C_SR, &readval) < 0)
+      {
+        return LAN8742_STATUS_READ_ERROR;
+      }
 
-    if((readval & LAN8742_PHYSCSR_HCDSPEEDMASK) == LAN8742_PHYSCSR_100BTX_FD)
-    {
-      return LAN8742_STATUS_100MBITS_FULLDUPLEX;
-    }
-    else if ((readval & LAN8742_PHYSCSR_HCDSPEEDMASK) == LAN8742_PHYSCSR_100BTX_HD)
-    {
-      return LAN8742_STATUS_100MBITS_HALFDUPLEX;
-    }
-    else if ((readval & LAN8742_PHYSCSR_HCDSPEEDMASK) == LAN8742_PHYSCSR_10BT_FD)
-    {
-      return LAN8742_STATUS_10MBITS_FULLDUPLEX;
+      /* Parse YT8512C status register */
+      uint32_t speed = readval & YT8512C_SR_SPEED_MODE;
+      uint32_t duplex = readval & YT8512C_SR_DUPLEX;
+
+      if(speed == YT8512C_SR_SPEED_100M && duplex)
+      {
+        return LAN8742_STATUS_100MBITS_FULLDUPLEX;
+      }
+      else if(speed == YT8512C_SR_SPEED_100M)
+      {
+        return LAN8742_STATUS_100MBITS_HALFDUPLEX;
+      }
+      else if(speed == YT8512C_SR_SPEED_10M && duplex)
+      {
+        return LAN8742_STATUS_10MBITS_FULLDUPLEX;
+      }
+      else
+      {
+        return LAN8742_STATUS_10MBITS_HALFDUPLEX;
+      }
     }
     else
     {
-      return LAN8742_STATUS_10MBITS_HALFDUPLEX;
+      /* LAN8742: Use register 0x001F for speed/duplex status */
+      if(pObj->IO.ReadReg(pObj->DevAddr, LAN8742_PHYSCSR, &readval) < 0)
+      {
+        return LAN8742_STATUS_READ_ERROR;
+      }
+
+      /* Check if auto nego not done */
+      if((readval & LAN8742_PHYSCSR_AUTONEGO_DONE) == 0)
+      {
+        return LAN8742_STATUS_AUTONEGO_NOTDONE;
+      }
+
+      if((readval & LAN8742_PHYSCSR_HCDSPEEDMASK) == LAN8742_PHYSCSR_100BTX_FD)
+      {
+        return LAN8742_STATUS_100MBITS_FULLDUPLEX;
+      }
+      else if ((readval & LAN8742_PHYSCSR_HCDSPEEDMASK) == LAN8742_PHYSCSR_100BTX_HD)
+      {
+        return LAN8742_STATUS_100MBITS_HALFDUPLEX;
+      }
+      else if ((readval & LAN8742_PHYSCSR_HCDSPEEDMASK) == LAN8742_PHYSCSR_10BT_FD)
+      {
+        return LAN8742_STATUS_10MBITS_FULLDUPLEX;
+      }
+      else
+      {
+        return LAN8742_STATUS_10MBITS_HALFDUPLEX;
+      }
     }
   }
 }

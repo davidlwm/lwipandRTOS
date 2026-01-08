@@ -46,7 +46,7 @@
   
 /** @defgroup LAN8742_Registers_Mapping LAN8742 Registers Mapping
   * @{
-  */ 
+  */
 #define LAN8742_BCR      ((uint16_t)0x0000U)
 #define LAN8742_BSR      ((uint16_t)0x0001U)
 #define LAN8742_PHYI1R   ((uint16_t)0x0002U)
@@ -69,6 +69,9 @@
 #define LAN8742_ISFR     ((uint16_t)0x001DU)
 #define LAN8742_IMR      ((uint16_t)0x001EU)
 #define LAN8742_PHYSCSR  ((uint16_t)0x001FU)
+
+/* YT8512C specific status register (compatible mode) */
+#define YT8512C_SR       ((uint16_t)0x0011U)  /* YT8512C Specific Status Register */
 /**
   * @}
   */
@@ -325,7 +328,15 @@
 #define LAN8742_PHYSCSR_10BT_HD         ((uint16_t)0x0004U)
 #define LAN8742_PHYSCSR_10BT_FD         ((uint16_t)0x0014U)
 #define LAN8742_PHYSCSR_100BTX_HD       ((uint16_t)0x0008U)
-#define LAN8742_PHYSCSR_100BTX_FD       ((uint16_t)0x0018U) 
+#define LAN8742_PHYSCSR_100BTX_FD       ((uint16_t)0x0018U)
+
+/* YT8512C Specific Status Register (0x0011) Bit Definition */
+#define YT8512C_SR_SPEED_MODE           ((uint16_t)0xC000U)  /* Speed mode mask */
+#define YT8512C_SR_SPEED_10M            ((uint16_t)0x0000U)  /* 10Mbps */
+#define YT8512C_SR_SPEED_100M           ((uint16_t)0x4000U)  /* 100Mbps */
+#define YT8512C_SR_SPEED_1000M          ((uint16_t)0x8000U)  /* 1000Mbps */
+#define YT8512C_SR_DUPLEX               ((uint16_t)0x2000U)  /* Duplex mode: 1=Full, 0=Half */
+#define YT8512C_SR_LINK_STATUS          ((uint16_t)0x0400U)  /* Link status: 1=Up, 0=Down */
 /**
   * @}
   */
