@@ -255,21 +255,28 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
 
   /* Wait for network initialization */
-  printf("[Task] Waiting for network link...\r\n");
+  printf("[Task] Waiting for network link (2 seconds)...\r\n");
   osDelay(2000);
 
+  printf("[Task] Delay complete, checking network status...\r\n");
   printf("[Task] Starting TCP Echo Server...\r\n");
 
   /* Initialize TCP Echo Server */
   tcp_echo_server_init();
 
+  printf("[Task] Echo Server initialization complete\r\n");
   printf("[Task] System ready, entering main loop\r\n");
   printf("========================================\r\n\r\n");
 
   /* Infinite loop */
+  uint32_t counter = 0;
   for(;;)
   {
-    osDelay(1);
+    osDelay(1000);
+    counter++;
+    if (counter % 10 == 0) {
+      printf("[Task] Heartbeat: %lu seconds\r\n", counter);
+    }
   }
   /* USER CODE END 5 */
 }

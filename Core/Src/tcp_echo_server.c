@@ -46,18 +46,27 @@ void tcp_echo_server_init(void)
 {
     err_t err;
 
+    printf("[TCP Echo Server] Starting initialization...\r\n");
+
     /* Create new TCP PCB */
     echo_pcb = tcp_new();
+
+    printf("[TCP Echo Server] TCP PCB created: %p\r\n", echo_pcb);
 
     if (echo_pcb != NULL)
     {
         /* Bind to port ECHO_SERVER_PORT (7) */
+        printf("[TCP Echo Server] Binding to port %d...\r\n", ECHO_SERVER_PORT);
         err = tcp_bind(echo_pcb, IP_ADDR_ANY, ECHO_SERVER_PORT);
+
+        printf("[TCP Echo Server] Bind result: %d\r\n", err);
 
         if (err == ERR_OK)
         {
             /* Start listening for incoming connections */
             echo_pcb = tcp_listen(echo_pcb);
+
+            printf("[TCP Echo Server] Listen PCB: %p\r\n", echo_pcb);
 
             /* Set accept callback */
             tcp_accept(echo_pcb, echo_accept);
@@ -71,13 +80,13 @@ void tcp_echo_server_init(void)
         }
         else
         {
-            printf("[TCP Echo Server] Bind port failed, error: %d\r\n", err);
+            printf("[TCP Echo Server] ERROR: Bind port failed, error: %d\r\n", err);
             memp_free(MEMP_TCP_PCB, echo_pcb);
         }
     }
     else
     {
-        printf("[TCP Echo Server] Create PCB failed\r\n");
+        printf("[TCP Echo Server] ERROR: Create PCB failed\r\n");
     }
 }
 
