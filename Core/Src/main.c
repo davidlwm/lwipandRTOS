@@ -47,7 +47,7 @@
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 128 * 4,
+  .stack_size = 2048 * 4,  // Increased from 128*4 to 2048*4 (8KB) for lwIP
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
