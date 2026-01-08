@@ -140,6 +140,11 @@ void pbuf_free_custom(struct pbuf *p);
   */
 void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *handlerEth)
 {
+  static uint32_t rx_count = 0;
+  rx_count++;
+  if (rx_count <= 10) {  // 只打印前10次，避免刷屏
+    printf("[ETH IRQ] RX callback #%lu\r\n", rx_count);
+  }
   osSemaphoreRelease(RxPktSemaphore);
 }
 /**
@@ -320,6 +325,8 @@ static void low_level_init(struct netif *netif)
     netif_set_up(netif);
     netif_set_link_up(netif);
     printf("[ETH] ETH DMA started, interface UP\r\n");
+    printf("[ETH] netif flags: 0x%08X\r\n", (unsigned int)netif->flags);
+    printf("[ETH] netif is_up: %d, is_link_up: %d\r\n", netif_is_up(netif), netif_is_link_up(netif));
 
 /* USER CODE BEGIN PHY_POST_CONFIG */
 
