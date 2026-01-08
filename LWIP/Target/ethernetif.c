@@ -184,7 +184,8 @@ static void low_level_init(struct netif *netif)
 /* USER CODE BEGIN OS_THREAD_ATTR_CMSIS_RTOS_V2 */
   osThreadAttr_t attributes;
 /* USER CODE END OS_THREAD_ATTR_CMSIS_RTOS_V2 */
-  uint32_t duplex, speed = 0;
+  uint32_t duplex = 0;
+  uint32_t speed = 0;
   int32_t PHYLinkState = 0;
   ETH_MACConfigTypeDef MACConf = {0};
   /* Start ETH HAL Init */
@@ -238,9 +239,9 @@ static void low_level_init(struct netif *netif)
   /* Accept broadcast address and ARP traffic */
   /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
   #if LWIP_ARP
-    netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP;
+    netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
   #else
-    netif->flags |= NETIF_FLAG_BROADCAST;
+    netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_LINK_UP;
   #endif /* LWIP_ARP */
 
   /* create a binary semaphore used for informing ethernetif of frame reception */
@@ -274,7 +275,7 @@ static void low_level_init(struct netif *netif)
     printf("[ETH] Initial PHY link state: %ld\r\n", PHYLinkState);
 
     /* Get link state */
-    if(PHYLinkState <= LAN8742_STATUS_LINK_DOWN)
+    if(PHYLinkState < LAN8742_STATUS_100MBITS_FULLDUPLEX)
     {
       printf("[ETH] PHY link DOWN at init, waiting for EthLink thread...\r\n");
       netif_set_link_down(netif);
@@ -771,14 +772,14 @@ void ethernet_link_thread(void* argument)
   {
   PHYLinkState = LAN8742_GetLinkState(&LAN8742);
 
-  if(netif_is_link_up(netif) && (PHYLinkState <= LAN8742_STATUS_LINK_DOWN))
+  if(netif_is_link_up(netif) && (PHYLinkState < LAN8742_STATUS_100MBITS_FULLDUPLEX))
   {
     printf("[EthLink] Link DOWN detected\r\n");
     HAL_ETH_Stop_IT(&heth);
     netif_set_down(netif);
     netif_set_link_down(netif);
   }
-  else if(!netif_is_link_up(netif) && (PHYLinkState > LAN8742_STATUS_LINK_DOWN))
+  else if(!netif_is_link_up(netif) && (PHYLinkState >= LAN8742_STATUS_100MBITS_FULLDUPLEX))
   {
     printf("[EthLink] Link UP detected (state=%ld)\r\n", PHYLinkState);
     switch (PHYLinkState)
