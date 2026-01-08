@@ -62,6 +62,8 @@ osThreadAttr_t attributes;
   */
 void MX_LWIP_Init(void)
 {
+  printf("[lwIP] === MX_LWIP_Init() START ===\r\n");
+
   /* IP addresses initialization */
   IP_ADDRESS[0] = 192;
   IP_ADDRESS[1] = 168;
@@ -115,6 +117,7 @@ void MX_LWIP_Init(void)
 /* USER CODE BEGIN 3 */
   printf("[lwIP] Network interface is UP\r\n");
   printf("[lwIP] Ethernet link thread created\r\n");
+  printf("[lwIP] MX_LWIP_Init() returning...\r\n");
 /* USER CODE END 3 */
 }
 
