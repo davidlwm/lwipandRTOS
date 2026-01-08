@@ -8,7 +8,7 @@
   *
   * TCP Echo Server with detailed logging
   * - Static IP: 192.168.1.30
-  * - Port: 7 (standard echo port)
+  * - Port: 8080
   * - Logs: Connection, Data received, Disconnection
   *
   ******************************************************************************
@@ -26,7 +26,7 @@ extern "C" {
 #include "lwip/tcp.h"
 
 /* Exported defines ----------------------------------------------------------*/
-#define ECHO_SERVER_PORT  7
+#define ECHO_SERVER_PORT  8080
 
 /* Exported functions prototypes ---------------------------------------------*/
 void tcp_echo_server_init(void);
