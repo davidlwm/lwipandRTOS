@@ -62,8 +62,12 @@ void tcp_echo_server_init(void)
             /* Set accept callback */
             tcp_accept(echo_pcb, echo_accept);
 
-            printf("[TCP Echo Server] Init OK, listening on port %d\r\n", ECHO_SERVER_PORT);
+            printf("\r\n[TCP Echo Server] ========================================\r\n");
+            printf("[TCP Echo Server] Initialization successful!\r\n");
+            printf("[TCP Echo Server] Listening on port %d\r\n", ECHO_SERVER_PORT);
             printf("[TCP Echo Server] Static IP: 192.168.1.30\r\n");
+            printf("[TCP Echo Server] Waiting for client connections...\r\n");
+            printf("[TCP Echo Server] ========================================\r\n\r\n");
         }
         else
         {
@@ -118,12 +122,14 @@ static err_t echo_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
         ret_err = ERR_OK;
 
         /* Log connection */
-        printf("[TCP Echo Server] New connection - Client IP: %d.%d.%d.%d:%d\r\n",
+        printf("\r\n>>> [TCP Echo Server] NEW CONNECTION <<<\r\n");
+        printf("[TCP Echo Server] Client IP: %d.%d.%d.%d:%d\r\n",
                ip4_addr1(&newpcb->remote_ip),
                ip4_addr2(&newpcb->remote_ip),
                ip4_addr3(&newpcb->remote_ip),
                ip4_addr4(&newpcb->remote_ip),
                newpcb->remote_port);
+        printf("[TCP Echo Server] Connection established\r\n\r\n");
     }
     else
     {
@@ -155,12 +161,14 @@ static err_t echo_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
     if (p == NULL)
     {
         /* Remote host closed connection */
-        printf("[TCP Echo Server] Client closed connection - IP: %d.%d.%d.%d:%d\r\n",
+        printf("\r\n<<< [TCP Echo Server] CONNECTION CLOSED <<<\r\n");
+        printf("[TCP Echo Server] Client IP: %d.%d.%d.%d:%d\r\n",
                ip4_addr1(&tpcb->remote_ip),
                ip4_addr2(&tpcb->remote_ip),
                ip4_addr3(&tpcb->remote_ip),
                ip4_addr4(&tpcb->remote_ip),
                tpcb->remote_port);
+        printf("[TCP Echo Server] Connection terminated by client\r\n\r\n");
 
         es->p = NULL;
         echo_close(tpcb, es);
@@ -185,30 +193,35 @@ static err_t echo_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
         es->p = p;
 
         /* Log received data */
-        printf("[TCP Echo Server] Received data - Length: %d bytes, from: %d.%d.%d.%d:%d\r\n",
-               p->tot_len,
+        printf("[TCP Echo Server] <<< DATA RECEIVED <<<\r\n");
+        printf("[TCP Echo Server] From: %d.%d.%d.%d:%d\r\n",
                ip4_addr1(&tpcb->remote_ip),
                ip4_addr2(&tpcb->remote_ip),
                ip4_addr3(&tpcb->remote_ip),
                ip4_addr4(&tpcb->remote_ip),
                tpcb->remote_port);
+        printf("[TCP Echo Server] Length: %d bytes\r\n", p->tot_len);
 
         /* Print received data (first 64 bytes max) */
         if (p->tot_len > 0)
         {
             char *data = (char *)p->payload;
             int print_len = (p->len < 64) ? p->len : 64;
-            printf("[TCP Echo Server] Data content: ");
+            printf("[TCP Echo Server] Content: \"");
             for (int i = 0; i < print_len; i++)
             {
                 if (data[i] >= 32 && data[i] <= 126)
                     printf("%c", data[i]);
+                else if (data[i] == '\r')
+                    printf("\\r");
+                else if (data[i] == '\n')
+                    printf("\\n");
                 else
                     printf(".");
             }
             if (p->tot_len > 64)
                 printf("...");
-            printf("\r\n");
+            printf("\"\r\n");
         }
 
         /* Echo back the received data */
@@ -223,7 +236,7 @@ static err_t echo_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
             pbuf_free(p);
             es->p = NULL;
 
-            printf("[TCP Echo Server] Data echoed\r\n");
+            printf("[TCP Echo Server] >>> DATA ECHOED >>> (%d bytes sent back)\r\n\r\n", p->len);
         }
         else if (ret_err == ERR_MEM)
         {

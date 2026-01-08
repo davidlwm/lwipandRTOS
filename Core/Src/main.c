@@ -100,8 +100,12 @@ int main(void)
 
   /* Initialize USART1 for printf debug */
   MX_USART1_UART_Init();
-  printf("\r\n=== STM32F407 lwIP + RTOS TCP Echo Server ===\r\n");
+  printf("\r\n\r\n");
+  printf("========================================\r\n");
+  printf("  STM32F407 lwIP + RTOS TCP Echo Server\r\n");
+  printf("========================================\r\n");
   printf("System starting...\r\n");
+  printf("USART1 initialized: TX=PA9, RX=PA10, 115200bps\r\n");
 
   /* USER CODE END 2 */
 
@@ -242,14 +246,25 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
+  printf("\r\n[Task] Default task started\r\n");
+  printf("[Task] Initializing lwIP stack...\r\n");
+
   MX_LWIP_Init();
+
+  printf("[Task] lwIP initialized successfully\r\n");
   /* USER CODE BEGIN 5 */
 
   /* Wait for network initialization */
-  osDelay(1000);
+  printf("[Task] Waiting for network link...\r\n");
+  osDelay(2000);
+
+  printf("[Task] Starting TCP Echo Server...\r\n");
 
   /* Initialize TCP Echo Server */
   tcp_echo_server_init();
+
+  printf("[Task] System ready, entering main loop\r\n");
+  printf("========================================\r\n\r\n");
 
   /* Infinite loop */
   for(;;)
