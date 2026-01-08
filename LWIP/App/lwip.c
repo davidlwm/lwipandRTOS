@@ -108,9 +108,8 @@ void MX_LWIP_Init(void)
   printf("[lwIP] Setting default interface...\r\n");
   netif_set_default(&gnetif);
 
-  /* We must always bring the network interface up connection or not... */
-  printf("[lwIP] Bringing interface up...\r\n");
-  netif_set_up(&gnetif);
+  /* Don't bring interface up here - let ethernetif_init do it when PHY link is up */
+  printf("[lwIP] Waiting for PHY link to come up...\r\n");
 
   /* Set the link callback function, this function is called on change of link status*/
   printf("[lwIP] Setting link callback...\r\n");

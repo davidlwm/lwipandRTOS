@@ -271,9 +271,12 @@ static void low_level_init(struct netif *netif)
   {
     PHYLinkState = LAN8742_GetLinkState(&LAN8742);
 
+    printf("[ETH] Initial PHY link state: %ld\r\n", PHYLinkState);
+
     /* Get link state */
     if(PHYLinkState <= LAN8742_STATUS_LINK_DOWN)
     {
+      printf("[ETH] PHY link DOWN at init, waiting for EthLink thread...\r\n");
       netif_set_link_down(netif);
       netif_set_down(netif);
     }
@@ -309,9 +312,11 @@ static void low_level_init(struct netif *netif)
     MACConf.Speed = speed;
     HAL_ETH_SetMACConfig(&heth, &MACConf);
 
+    printf("[ETH] Starting ETH DMA (speed=%lu, duplex=%lu)\r\n", speed, duplex);
     HAL_ETH_Start_IT(&heth);
     netif_set_up(netif);
     netif_set_link_up(netif);
+    printf("[ETH] ETH DMA started, interface UP\r\n");
 
 /* USER CODE BEGIN PHY_POST_CONFIG */
 
@@ -768,12 +773,14 @@ void ethernet_link_thread(void* argument)
 
   if(netif_is_link_up(netif) && (PHYLinkState <= LAN8742_STATUS_LINK_DOWN))
   {
+    printf("[EthLink] Link DOWN detected\r\n");
     HAL_ETH_Stop_IT(&heth);
     netif_set_down(netif);
     netif_set_link_down(netif);
   }
   else if(!netif_is_link_up(netif) && (PHYLinkState > LAN8742_STATUS_LINK_DOWN))
   {
+    printf("[EthLink] Link UP detected (state=%ld)\r\n", PHYLinkState);
     switch (PHYLinkState)
     {
     case LAN8742_STATUS_100MBITS_FULLDUPLEX:
@@ -807,9 +814,11 @@ void ethernet_link_thread(void* argument)
       MACConf.DuplexMode = duplex;
       MACConf.Speed = speed;
       HAL_ETH_SetMACConfig(&heth, &MACConf);
+      printf("[EthLink] Starting ETH DMA (speed=%u, duplex=%u)\r\n", speed, duplex);
       HAL_ETH_Start_IT(&heth);
       netif_set_up(netif);
       netif_set_link_up(netif);
+      printf("[EthLink] ETH DMA started, interface UP\r\n");
     }
   }
 
