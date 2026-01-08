@@ -62,18 +62,18 @@ void tcp_echo_server_init(void)
             /* Set accept callback */
             tcp_accept(echo_pcb, echo_accept);
 
-            printf("[TCP Echo Server] 初始化成功，监听端口 %d\r\n", ECHO_SERVER_PORT);
-            printf("[TCP Echo Server] 静态IP: 192.168.1.30\r\n");
+            printf("[TCP Echo Server] Init OK, listening on port %d\r\n", ECHO_SERVER_PORT);
+            printf("[TCP Echo Server] Static IP: 192.168.1.30\r\n");
         }
         else
         {
-            printf("[TCP Echo Server] 绑定端口失败，错误码: %d\r\n", err);
+            printf("[TCP Echo Server] Bind port failed, error: %d\r\n", err);
             memp_free(MEMP_TCP_PCB, echo_pcb);
         }
     }
     else
     {
-        printf("[TCP Echo Server] 创建PCB失败\r\n");
+        printf("[TCP Echo Server] Create PCB failed\r\n");
     }
 }
 
@@ -118,7 +118,7 @@ static err_t echo_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
         ret_err = ERR_OK;
 
         /* Log connection */
-        printf("[TCP Echo Server] 新连接建立 - 客户端IP: %d.%d.%d.%d:%d\r\n",
+        printf("[TCP Echo Server] New connection - Client IP: %d.%d.%d.%d:%d\r\n",
                ip4_addr1(&newpcb->remote_ip),
                ip4_addr2(&newpcb->remote_ip),
                ip4_addr3(&newpcb->remote_ip),
@@ -127,7 +127,7 @@ static err_t echo_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
     }
     else
     {
-        printf("[TCP Echo Server] 内存分配失败，拒绝连接\r\n");
+        printf("[TCP Echo Server] Memory alloc failed, reject connection\r\n");
         ret_err = ERR_MEM;
     }
 
@@ -155,7 +155,7 @@ static err_t echo_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
     if (p == NULL)
     {
         /* Remote host closed connection */
-        printf("[TCP Echo Server] 客户端关闭连接 - IP: %d.%d.%d.%d:%d\r\n",
+        printf("[TCP Echo Server] Client closed connection - IP: %d.%d.%d.%d:%d\r\n",
                ip4_addr1(&tpcb->remote_ip),
                ip4_addr2(&tpcb->remote_ip),
                ip4_addr3(&tpcb->remote_ip),
@@ -169,7 +169,7 @@ static err_t echo_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
     /* Else: a non empty frame was received from client but for some reason err != ERR_OK */
     else if (err != ERR_OK)
     {
-        printf("[TCP Echo Server] 接收错误，错误码: %d\r\n", err);
+        printf("[TCP Echo Server] Receive error, code: %d\r\n", err);
 
         /* Free received pbuf */
         if (p != NULL)
@@ -185,7 +185,7 @@ static err_t echo_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
         es->p = p;
 
         /* Log received data */
-        printf("[TCP Echo Server] 收到数据 - 长度: %d 字节，来自: %d.%d.%d.%d:%d\r\n",
+        printf("[TCP Echo Server] Received data - Length: %d bytes, from: %d.%d.%d.%d:%d\r\n",
                p->tot_len,
                ip4_addr1(&tpcb->remote_ip),
                ip4_addr2(&tpcb->remote_ip),
@@ -198,7 +198,7 @@ static err_t echo_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
         {
             char *data = (char *)p->payload;
             int print_len = (p->len < 64) ? p->len : 64;
-            printf("[TCP Echo Server] 数据内容: ");
+            printf("[TCP Echo Server] Data content: ");
             for (int i = 0; i < print_len; i++)
             {
                 if (data[i] >= 32 && data[i] <= 126)
@@ -223,17 +223,17 @@ static err_t echo_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t er
             pbuf_free(p);
             es->p = NULL;
 
-            printf("[TCP Echo Server] 数据已回显\r\n");
+            printf("[TCP Echo Server] Data echoed\r\n");
         }
         else if (ret_err == ERR_MEM)
         {
             /* We are low on memory, try again later */
-            printf("[TCP Echo Server] 内存不足，稍后重试\r\n");
+            printf("[TCP Echo Server] Out of memory, retry later\r\n");
             es->p = p;
         }
         else
         {
-            printf("[TCP Echo Server] 发送失败，错误码: %d\r\n", ret_err);
+            printf("[TCP Echo Server] Send failed, error: %d\r\n", ret_err);
             /* Free the pbuf */
             pbuf_free(p);
             es->p = NULL;
@@ -268,7 +268,7 @@ static void echo_error(void *arg, err_t err)
 
     if (es != NULL)
     {
-        printf("[TCP Echo Server] 连接错误，错误码: %d\r\n", err);
+        printf("[TCP Echo Server] Connection error, code: %d\r\n", err);
 
         /* Free es structure */
         if (es->p != NULL)
@@ -337,5 +337,5 @@ static void echo_close(struct tcp_pcb *tpcb, struct echo_state *es)
     /* Close tcp connection */
     tcp_close(tpcb);
 
-    printf("[TCP Echo Server] 连接已关闭\r\n");
+    printf("[TCP Echo Server] Connection closed\r\n");
 }

@@ -98,10 +98,10 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
 
-  /* 初始化 USART1 用于 printf 调试 */
+  /* Initialize USART1 for printf debug */
   MX_USART1_UART_Init();
   printf("\r\n=== STM32F407 lwIP + RTOS TCP Echo Server ===\r\n");
-  printf("系统启动中...\r\n");
+  printf("System starting...\r\n");
 
   /* USER CODE END 2 */
 
@@ -245,10 +245,10 @@ void StartDefaultTask(void *argument)
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
 
-  /* 等待网络初始化完成 */
+  /* Wait for network initialization */
   osDelay(1000);
 
-  /* 初始化 TCP Echo Server */
+  /* Initialize TCP Echo Server */
   tcp_echo_server_init();
 
   /* Infinite loop */

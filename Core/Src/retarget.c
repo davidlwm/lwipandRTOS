@@ -15,6 +15,7 @@
 /* USER CODE END Header */
 
 #include "main.h"
+#include "stm32f4xx_hal_uart.h"
 #include <stdio.h>
 
 /* USART1 handle */
