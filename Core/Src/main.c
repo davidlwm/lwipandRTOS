@@ -23,7 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "tcp_echo_server.h"
+#include "retarget.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,6 +97,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
+
+  /* 初始化 USART1 用于 printf 调试 */
+  MX_USART1_UART_Init();
+  printf("\r\n=== STM32F407 lwIP + RTOS TCP Echo Server ===\r\n");
+  printf("系统启动中...\r\n");
 
   /* USER CODE END 2 */
 
@@ -238,6 +244,13 @@ void StartDefaultTask(void *argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
+
+  /* 等待网络初始化完成 */
+  osDelay(1000);
+
+  /* 初始化 TCP Echo Server */
+  tcp_echo_server_init();
+
   /* Infinite loop */
   for(;;)
   {
