@@ -273,6 +273,7 @@ static void low_level_init(struct netif *netif)
     PHYLinkState = LAN8742_GetLinkState(&LAN8742);
 
     printf("[ETH] Initial PHY link state: %ld\r\n", PHYLinkState);
+    printf("[ETH] DEBUG: Before switch - speed=%lu, duplex=%lu\r\n", speed, duplex);
 
     /* Get link state */
     if(PHYLinkState < LAN8742_STATUS_100MBITS_FULLDUPLEX)
@@ -283,6 +284,7 @@ static void low_level_init(struct netif *netif)
     }
     else
     {
+      printf("[ETH] DEBUG: Entering switch with state=%ld\r\n", PHYLinkState);
       switch (PHYLinkState)
       {
       case LAN8742_STATUS_100MBITS_FULLDUPLEX:
