@@ -83,40 +83,51 @@ void MX_LWIP_Init(void)
   printf("[lwIP]   IP Address: %d.%d.%d.%d\r\n", IP_ADDRESS[0], IP_ADDRESS[1], IP_ADDRESS[2], IP_ADDRESS[3]);
   printf("[lwIP]   Netmask:    %d.%d.%d.%d\r\n", NETMASK_ADDRESS[0], NETMASK_ADDRESS[1], NETMASK_ADDRESS[2], NETMASK_ADDRESS[3]);
   printf("[lwIP]   Gateway:    %d.%d.%d.%d\r\n", GATEWAY_ADDRESS[0], GATEWAY_ADDRESS[1], GATEWAY_ADDRESS[2], GATEWAY_ADDRESS[3]);
+  printf("[lwIP] Calling tcpip_init()...\r\n");
 /* USER CODE END IP_ADDRESSES */
 
   /* Initilialize the LwIP stack with RTOS */
   tcpip_init( NULL, NULL );
+
+  printf("[lwIP] tcpip_init() completed\r\n");
 
   /* IP addresses initialization without DHCP (IPv4) */
   IP4_ADDR(&ipaddr, IP_ADDRESS[0], IP_ADDRESS[1], IP_ADDRESS[2], IP_ADDRESS[3]);
   IP4_ADDR(&netmask, NETMASK_ADDRESS[0], NETMASK_ADDRESS[1] , NETMASK_ADDRESS[2], NETMASK_ADDRESS[3]);
   IP4_ADDR(&gw, GATEWAY_ADDRESS[0], GATEWAY_ADDRESS[1], GATEWAY_ADDRESS[2], GATEWAY_ADDRESS[3]);
 
+  printf("[lwIP] IP addresses configured\r\n");
+
   /* add the network interface (IPv4/IPv6) with RTOS */
+  printf("[lwIP] Adding network interface...\r\n");
   netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
 
+  printf("[lwIP] Network interface added\r\n");
+
   /* Registers the default network interface */
+  printf("[lwIP] Setting default interface...\r\n");
   netif_set_default(&gnetif);
 
   /* We must always bring the network interface up connection or not... */
+  printf("[lwIP] Bringing interface up...\r\n");
   netif_set_up(&gnetif);
 
   /* Set the link callback function, this function is called on change of link status*/
+  printf("[lwIP] Setting link callback...\r\n");
   netif_set_link_callback(&gnetif, ethernet_link_status_updated);
 
   /* Create the Ethernet link handler thread */
 /* USER CODE BEGIN H7_OS_THREAD_NEW_CMSIS_RTOS_V2 */
+  printf("[lwIP] Creating Ethernet link thread...\r\n");
   memset(&attributes, 0x0, sizeof(osThreadAttr_t));
   attributes.name = "EthLink";
   attributes.stack_size = INTERFACE_THREAD_STACK_SIZE;
   attributes.priority = osPriorityBelowNormal;
   osThreadNew(ethernet_link_thread, &gnetif, &attributes);
+  printf("[lwIP] Ethernet link thread created\r\n");
 /* USER CODE END H7_OS_THREAD_NEW_CMSIS_RTOS_V2 */
 
 /* USER CODE BEGIN 3 */
-  printf("[lwIP] Network interface is UP\r\n");
-  printf("[lwIP] Ethernet link thread created\r\n");
   printf("[lwIP] MX_LWIP_Init() returning...\r\n");
 /* USER CODE END 3 */
 }
