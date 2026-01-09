@@ -364,6 +364,19 @@ static void low_level_init(struct netif *netif)
            (unsigned int)((maca0lr >> 24) & 0xFF),
            (unsigned int)(maca0hr & 0xFF),
            (unsigned int)((maca0hr >> 8) & 0xFF));
+
+    // 检查 RX 描述符
+    printf("[ETH] === RX Descriptor Info ===\r\n");
+    printf("[ETH] RxDescList.RxDesc: %p\r\n", heth.RxDescList.RxDesc);
+    if (heth.RxDescList.RxDesc != NULL) {
+        ETH_DMADescTypeDef *rxdesc = (ETH_DMADescTypeDef *)heth.RxDescList.RxDesc;
+        for (int i = 0; i < 4 && i < ETH_RX_DESC_CNT; i++) {
+            printf("[ETH] RxDesc[%d]: Status=0x%08lX, Buf1Addr=0x%08lX\r\n",
+                   i,
+                   (unsigned long)rxdesc[i].Status,
+                   (unsigned long)rxdesc[i].Buffer1Addr);
+        }
+    }
     printf("[ETH] ========================\r\n");
 
     netif_set_up(netif);
