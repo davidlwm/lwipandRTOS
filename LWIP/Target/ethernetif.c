@@ -321,10 +321,11 @@ static void low_level_init(struct netif *netif)
     HAL_ETH_SetMACConfig(&heth, &MACConf);
 
     printf("[ETH] Starting ETH DMA (speed=%lu, duplex=%lu)\r\n", speed, duplex);
-    HAL_ETH_Start_IT(&heth);
+    /* 使用中断模式，与 ethernet_link_thread 保持一致 */
+    HAL_ETH_Start_IT(&heth);  // 使用中断模式
     netif_set_up(netif);
     netif_set_link_up(netif);
-    printf("[ETH] ETH DMA started, interface UP\r\n");
+    printf("[ETH] ETH DMA started (interrupt mode), interface UP\r\n");
     printf("[ETH] netif flags: 0x%08X\r\n", (unsigned int)netif->flags);
     printf("[ETH] netif is_up: %d, is_link_up: %d\r\n", netif_is_up(netif), netif_is_link_up(netif));
 
