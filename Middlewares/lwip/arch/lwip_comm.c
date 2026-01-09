@@ -101,10 +101,10 @@ uint8_t lwip_comm_init(void)
     // 1. ʼTCP/IPЭջɹ
     tcpip_init(NULL, NULL);
     
-    // 2. ڴ
+    // 2. 分配内存
     if (ethernet_mem_malloc())
     {
-        printf("̫ڴʧ\r\n");
+        printf("Ethernet memory allocation FAILED\r\n");
         return 1;
     }
 

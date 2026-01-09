@@ -247,25 +247,41 @@ uint8_t ethernet_mem_malloc(void)
     if (g_eth_dma_rx_dscr_tab == NULL && g_eth_dma_tx_dscr_tab == NULL &&
         g_eth_rx_buf == NULL && g_eth_tx_buf == NULL)
     {
-        g_eth_dma_rx_dscr_tab = (ETH_DMADescTypeDef *)malloc(ETH_RXBUFNB * sizeof(ETH_DMADescTypeDef));         /* ڴ */
-        g_eth_dma_tx_dscr_tab = (ETH_DMADescTypeDef *)malloc(ETH_TXBUFNB * sizeof(ETH_DMADescTypeDef));         /* ڴ */
-        g_eth_rx_buf = (uint8_t *)malloc(ETH_RX_BUF_SIZE * ETH_RXBUFNB);                             /* ڴ */
-        g_eth_tx_buf = (uint8_t *)malloc(ETH_TX_BUF_SIZE * ETH_TXBUFNB);                             /* ڴ */
+        printf("Allocating ETH DMA buffers...\r\n");
+
+        g_eth_dma_rx_dscr_tab = (ETH_DMADescTypeDef *)malloc(ETH_RXBUFNB * sizeof(ETH_DMADescTypeDef));
+        printf("RX desc: %p\r\n", (void*)g_eth_dma_rx_dscr_tab);
+
+        g_eth_dma_tx_dscr_tab = (ETH_DMADescTypeDef *)malloc(ETH_TXBUFNB * sizeof(ETH_DMADescTypeDef));
+        printf("TX desc: %p\r\n", (void*)g_eth_dma_tx_dscr_tab);
+
+        g_eth_rx_buf = (uint8_t *)malloc(ETH_RX_BUF_SIZE * ETH_RXBUFNB);
+        printf("RX buf: %p (size=%d)\r\n", (void*)g_eth_rx_buf, ETH_RX_BUF_SIZE * ETH_RXBUFNB);
+
+        g_eth_tx_buf = (uint8_t *)malloc(ETH_TX_BUF_SIZE * ETH_TXBUFNB);
+        printf("TX buf: %p (size=%d)\r\n", (void*)g_eth_tx_buf, ETH_TX_BUF_SIZE * ETH_TXBUFNB);
 
         if (g_eth_dma_rx_dscr_tab == NULL || g_eth_dma_tx_dscr_tab == NULL ||
             g_eth_rx_buf == NULL || g_eth_tx_buf == NULL)
         {
+            printf("ERROR: Memory allocation failed!\r\n");
+            printf("  RX desc: %s\r\n", g_eth_dma_rx_dscr_tab ? "OK" : "FAIL");
+            printf("  TX desc: %s\r\n", g_eth_dma_tx_dscr_tab ? "OK" : "FAIL");
+            printf("  RX buf: %s\r\n", g_eth_rx_buf ? "OK" : "FAIL");
+            printf("  TX buf: %s\r\n", g_eth_tx_buf ? "OK" : "FAIL");
             ethernet_mem_free();
-            return 1;                                                                               /* ʧ */
+            return 1;
         }
 
         memset(g_eth_dma_rx_dscr_tab, 0, ETH_RXBUFNB * sizeof(ETH_DMADescTypeDef));
         memset(g_eth_dma_tx_dscr_tab, 0, ETH_TXBUFNB * sizeof(ETH_DMADescTypeDef));
         memset(g_eth_rx_buf, 0, ETH_RX_BUF_SIZE * ETH_RXBUFNB);
         memset(g_eth_tx_buf, 0, ETH_TX_BUF_SIZE * ETH_TXBUFNB);
+
+        printf("All ETH buffers allocated successfully\r\n");
     }
 
-    return 0;       /* ɹ */
+    return 0;
 }
 
 /**
