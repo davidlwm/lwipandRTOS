@@ -25,6 +25,8 @@
 /* USER CODE BEGIN Includes */
 #include "tcp_echo_server.h"
 #include "retarget.h"
+#include "lwip_comm.h"
+#include "ethernetif.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -237,23 +239,27 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-  /* init code for LWIP */
-  printf("\r\n[Task] Default task started\r\n");
-  printf("[Task] Initializing lwIP stack...\r\n");
-
-  MX_LWIP_Init();
-
-  printf("[Task] lwIP initialized successfully\r\n");
   /* USER CODE BEGIN 5 */
+  printf("\r\n[Task] Default task started\r\n");
+  printf("[Task] Initializing lwIP stack (using old STM32F407 version)...\r\n");
+
+  // 使用旧版网络初始化 (来自stm32f407项目)
+  if (lwip_comm_init() == 0) {
+    printf("[Task] lwIP initialized successfully\r\n");
+  } else {
+    printf("[Task] lwIP initialization FAILED!\r\n");
+    printf("[Task] Error code: %d\r\n", lwip_comm_init());
+    Error_Handler();
+  }
 
   /* Wait for network initialization */
   printf("[Task] Waiting for network link (2 seconds)...\r\n");
   osDelay(2000);
 
-  printf("[Task] Delay complete, checking network status...\r\n");
-  printf("[Task] Starting TCP Echo Server...\r\n");
+  printf("[Task] Network status check...\r\n");
 
   /* Initialize TCP Echo Server */
+  printf("[Task] Starting TCP Echo Server...\r\n");
   tcp_echo_server_init();
 
   printf("[Task] Echo Server initialization complete\r\n");
