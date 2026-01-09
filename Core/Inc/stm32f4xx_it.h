@@ -53,7 +53,7 @@ void BusFault_Handler(void);
 void UsageFault_Handler(void);
 void DebugMon_Handler(void);
 void TIM1_UP_TIM10_IRQHandler(void);
-void ETH_IRQHandler(void);
+// void ETH_IRQHandler(void);  // 已禁用：使用ethernet_bsp.c中的旧版实现（stm32f407项目）
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

@@ -176,38 +176,39 @@ void TIM1_UP_TIM10_IRQHandler(void)
 
 /**
   * @brief This function handles Ethernet global interrupt.
+  * @note 已禁用：使用ethernet_bsp.c中的旧版ETH_IRQHandler（stm32f407项目）
   */
-void ETH_IRQHandler(void)
-{
-  /* USER CODE BEGIN ETH_IRQn 0 */
-  static uint32_t irq_count = 0;
-  irq_count++;
-  if (irq_count <= 10) {
-    // 读取 DMA 状态寄存器
-    uint32_t dmasr = ETH->DMASR;
-    uint32_t dmaier = ETH->DMAIER;
-    printf("[ETH_IRQ] Interrupt #%lu, DMASR=0x%08lX, DMAIER=0x%08lX\r\n", irq_count, dmasr, dmaier);
-
-    // 检查接收中断标志
-    if (dmasr & (1 << 6)) {  // ETH_DMASR_RS bit 6
-      printf("[ETH_IRQ] RX interrupt flag is SET\r\n");
-    } else {
-      printf("[ETH_IRQ] RX interrupt flag is CLEAR\r\n");
-    }
-
-    // 检查接收中断使能
-    if (dmaier & (1 << 6)) {  // ETH_DMAIER_RIE bit 6
-      printf("[ETH_IRQ] RX interrupt is ENABLED\r\n");
-    } else {
-      printf("[ETH_IRQ] RX interrupt is DISABLED\r\n");
-    }
-  }
-  /* USER CODE END ETH_IRQn 0 */
-  HAL_ETH_IRQHandler(&heth);
-  /* USER CODE BEGIN ETH_IRQn 1 */
-
-  /* USER CODE END ETH_IRQn 1 */
-}
+// void ETH_IRQHandler(void)
+// {
+//   /* USER CODE BEGIN ETH_IRQn 0 */
+//   static uint32_t irq_count = 0;
+//   irq_count++;
+//   if (irq_count <= 10) {
+//     // 读取 DMA 状态寄存器
+//     uint32_t dmasr = ETH->DMASR;
+//     uint32_t dmaier = ETH->DMAIER;
+//     printf("[ETH_IRQ] Interrupt #%lu, DMASR=0x%08lX, DMAIER=0x%08lX\r\n", irq_count, dmasr, dmaier);
+//
+//     // 检查接收中断标志
+//     if (dmasr & (1 << 6)) {  // ETH_DMASR_RS bit 6
+//       printf("[ETH_IRQ] RX interrupt flag is SET\r\n");
+//     } else {
+//       printf("[ETH_IRQ] RX interrupt flag is CLEAR\r\n");
+//     }
+//
+//     // 检查接收中断使能
+//     if (dmaier & (1 << 6)) {  // ETH_DMAIER_RIE bit 6
+//       printf("[ETH_IRQ] RX interrupt is ENABLED\r\n");
+//     } else {
+//       printf("[ETH_IRQ] RX interrupt is DISABLED\r\n");
+//     }
+//   }
+//   /* USER CODE END ETH_IRQn 0 */
+//   HAL_ETH_IRQHandler(&heth);
+//   /* USER CODE BEGIN ETH_IRQn 1 */
+//
+//   /* USER CODE END ETH_IRQn 1 */
+// }
 
 /* USER CODE BEGIN 1 */
 
