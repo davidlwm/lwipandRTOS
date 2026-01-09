@@ -143,7 +143,15 @@ void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *handlerEth)
   static uint32_t rx_count = 0;
   rx_count++;
   printf("[ETH IRQ] RX callback #%lu\r\n", rx_count);  // 移除限制，持续打印
+
+  // 检查信号量
+  if (RxPktSemaphore == NULL) {
+    printf("[ETH IRQ] ERROR: RxPktSemaphore is NULL!\r\n");
+    return;
+  }
+
   osSemaphoreRelease(RxPktSemaphore);
+  printf("[ETH IRQ] Semaphore released\r\n");
 }
 /**
   * @brief  Ethernet Tx Transfer completed callback
