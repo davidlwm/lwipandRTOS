@@ -901,6 +901,9 @@ void ethernet_link_thread(void* argument)
 void HAL_ETH_RxAllocateCallback(uint8_t **buff)
 {
 /* USER CODE BEGIN HAL ETH RxAllocateCallback */
+  static uint32_t alloc_count = 0;
+  alloc_count++;
+
   struct pbuf_custom *p = LWIP_MEMPOOL_ALLOC(RX_POOL);
   if (p)
   {
@@ -911,11 +914,16 @@ void HAL_ETH_RxAllocateCallback(uint8_t **buff)
     * This must be performed whenever a buffer's allocated because it may be
     * changed by lwIP or the app, e.g., pbuf_free decrements ref. */
     pbuf_alloced_custom(PBUF_RAW, 0, PBUF_REF, p, *buff, ETH_RX_BUF_SIZE);
+
+    if (alloc_count <= 10) {
+      printf("[ETH_ALLOC] #%lu: SUCCESS, buff=%p\r\n", alloc_count, *buff);
+    }
   }
   else
   {
     RxAllocStatus = RX_ALLOC_ERROR;
     *buff = NULL;
+    printf("[ETH_ALLOC] #%lu: FAILED - RX_POOL exhausted!\r\n", alloc_count);
   }
 /* USER CODE END HAL ETH RxAllocateCallback */
 }
