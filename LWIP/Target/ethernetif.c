@@ -371,10 +371,10 @@ static void low_level_init(struct netif *netif)
     if (heth.RxDescList.RxDesc != NULL) {
         ETH_DMADescTypeDef *rxdesc = (ETH_DMADescTypeDef *)heth.RxDescList.RxDesc;
         for (int i = 0; i < 4 && i < ETH_RX_DESC_CNT; i++) {
-            printf("[ETH] RxDesc[%d]: Status=0x%08lX, Buf1Addr=0x%08lX\r\n",
+            printf("[ETH] RxDesc[%d]: DESC0=0x%08lX, DESC2=0x%08lX\r\n",
                    i,
-                   (unsigned long)rxdesc[i].Status,
-                   (unsigned long)rxdesc[i].Buffer1Addr);
+                   (unsigned long)rxdesc[i].DESC0,  // Status/Control
+                   (unsigned long)rxdesc[i].DESC2); // Buffer1 Address
         }
     }
     printf("[ETH] ========================\r\n");
