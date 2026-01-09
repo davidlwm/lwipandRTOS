@@ -340,57 +340,75 @@ void lwip_periodic_handle(void *argument)
 
 #if LWIP_NETIF_LINK_CALLBACK
 /**
-  * @brief       ETH·״̬netif
+  * @brief       ETH路状态netif
   * @param       argument: netif
-  * @retval      
+  * @retval
   */
 void lwip_link_thread( void * argument )
 {
     uint32_t regval = 0;
     struct netif *netif = (struct netif *) argument;
     int link_again_num = 0;
+    uint32_t heartbeat_counter = 0;
+
+    printf("[LINK] Thread started, monitoring PHY link status...\r\n");
 
     while(1)
     {
-        /* ȡPHY״̬ĴȡϢ */
+        /* 获取PHY状态寄存器取信息 */
         HAL_ETH_ReadPHYRegister(&g_eth_handler,PHY_BSR, &regval);
 
-        /* ж״̬ */
+        /* 判断状态 */
         if((regval & PHY_LINKED_STATUS) == 0)
         {
-            g_lwipdev.link_status = LWIP_LINK_OFF;
-            
-            link_again_num ++ ;
-
-            if (link_again_num >= 5)                    /* Debounce: wait for 5 consecutive failures before disconnecting */
+            if (g_lwipdev.link_status != LWIP_LINK_OFF)
             {
-                continue;
-            }
-            else                                        /* First detection of disconnect, perform disconnect operation */
-            {
-#if LWIP_DHCP                                           /* ʹDHCPĻ */
-                g_lwip_dhcp_state = LWIP_DHCP_LINK_DOWN;
+                link_again_num++;
 
-                dhcp_stop(netif);
+                if (link_again_num >= 5)                    /* Debounce: wait for 5 consecutive failures before disconnecting */
+                {
+                    g_lwipdev.link_status = LWIP_LINK_OFF;
+#if LWIP_DHCP                                           /* 使用DHCP的话 */
+                    g_lwip_dhcp_state = LWIP_DHCP_LINK_DOWN;
+                    dhcp_stop(netif);
 #endif
-                printf("LWIP_LINK_DOWN\r\n");    
-                HAL_ETH_Stop(&g_eth_handler);
-                netif_set_down(netif);
-                netif_set_link_down(netif);
+                    printf("[LINK] Cable DISCONNECTED\r\n");
+                    HAL_ETH_Stop(&g_eth_handler);
+                    netif_set_down(netif);
+                    netif_set_link_down(netif);
+                    link_again_num = 0;
+                }
             }
         }
-        else                                            /* ߲ */
+        else                                            /* 链路 */
         {
             link_again_num = 0;
-            
-            if (g_lwipdev.link_status == LWIP_LINK_OFF)/* ̫ */
+
+            if (g_lwipdev.link_status == LWIP_LINK_OFF)/* 以太网 */
             {
-                printf("LWIP_LINK_ON\r\n");
+                printf("[LINK] Cable CONNECTED\r\n");
+                printf("[LINK] Starting Ethernet MAC...\r\n");
                 g_lwipdev.link_status = LWIP_LINK_ON;
                 HAL_ETH_Start(&g_eth_handler);
                 netif_set_up(netif);
-                netif_set_link_up(netif);              
+                netif_set_link_up(netif);
             }
+        }
+
+        /* Heartbeat every 10 seconds (50 ticks * 200ms) */
+        heartbeat_counter++;
+        if (heartbeat_counter >= 50)
+        {
+            heartbeat_counter = 0;
+            printf("[HEARTBEAT] Link: %s | IP: %d.%d.%d.%d | RX: %u | TX: %u\r\n",
+                   g_lwipdev.link_status ? "UP" : "DOWN",
+                   ip4_addr1(ip_2_ip4(&netif->ip_addr)),
+                   ip4_addr2(ip_2_ip4(&netif->ip_addr)),
+                   ip4_addr3(ip_2_ip4(&netif->ip_addr)),
+                   ip4_addr4(ip_2_ip4(&netif->ip_addr)),
+                   netif->input_cnt,  /* Packets received */
+                   netif->output_cnt  /* Packets sent */
+            );
         }
 
         vTaskDelay(200);  /* Check every 200ms */
