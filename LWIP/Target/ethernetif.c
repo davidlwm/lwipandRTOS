@@ -334,9 +334,13 @@ static void low_level_init(struct netif *netif)
     HAL_ETH_SetMACConfig(&heth, &MACConf);
 
     printf("[ETH] Starting ETH DMA (speed=%lu, duplex=%lu)\r\n", speed, duplex);
+    printf("[ETH] ETH_RX_DESC_CNT = %d\r\n", ETH_RX_DESC_CNT);
+    printf("[ETH] Before Start: RxBuildDescCnt=%lu\r\n", (unsigned long)heth.RxDescList.RxBuildDescCnt);
+
     /* 使用中断模式，与 ethernet_link_thread 保持一致 */
     HAL_StatusTypeDef start_result = HAL_ETH_Start_IT(&heth);  // 使用中断模式
     printf("[ETH] HAL_ETH_Start_IT result: %d (0=OK)\r\n", start_result);
+    printf("[ETH] After Start: RxBuildDescCnt=%lu\r\n", (unsigned long)heth.RxDescList.RxBuildDescCnt);
 
     // 等待描述符初始化完成
     osDelay(10);
