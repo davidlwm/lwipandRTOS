@@ -142,9 +142,7 @@ void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *handlerEth)
 {
   static uint32_t rx_count = 0;
   rx_count++;
-  if (rx_count <= 10) {  // 只打印前10次，避免刷屏
-    printf("[ETH IRQ] RX callback #%lu\r\n", rx_count);
-  }
+  printf("[ETH IRQ] RX callback #%lu\r\n", rx_count);  // 移除限制，持续打印
   osSemaphoreRelease(RxPktSemaphore);
 }
 /**
@@ -322,7 +320,8 @@ static void low_level_init(struct netif *netif)
 
     printf("[ETH] Starting ETH DMA (speed=%lu, duplex=%lu)\r\n", speed, duplex);
     /* 使用中断模式，与 ethernet_link_thread 保持一致 */
-    HAL_ETH_Start_IT(&heth);  // 使用中断模式
+    HAL_StatusTypeDef start_result = HAL_ETH_Start_IT(&heth);  // 使用中断模式
+    printf("[ETH] HAL_ETH_Start_IT result: %d (0=OK)\r\n", start_result);
     netif_set_up(netif);
     netif_set_link_up(netif);
     printf("[ETH] ETH DMA started (interrupt mode), interface UP\r\n");
@@ -826,7 +825,8 @@ void ethernet_link_thread(void* argument)
       MACConf.Speed = speed;
       HAL_ETH_SetMACConfig(&heth, &MACConf);
       printf("[EthLink] Starting ETH DMA (speed=%u, duplex=%u)\r\n", speed, duplex);
-      HAL_ETH_Start_IT(&heth);
+      err_t start_result = HAL_ETH_Start_IT(&heth);
+      printf("[EthLink] HAL_ETH_Start_IT result: %d\r\n", start_result);
       netif_set_up(netif);
       netif_set_link_up(netif);
       printf("[EthLink] ETH DMA started, interface UP\r\n");
