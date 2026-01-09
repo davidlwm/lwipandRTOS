@@ -335,6 +335,7 @@ static void low_level_init(struct netif *netif)
 
     printf("[ETH] Starting ETH DMA (speed=%lu, duplex=%lu)\r\n", speed, duplex);
     printf("[ETH] ETH_RX_DESC_CNT = %d\r\n", ETH_RX_DESC_CNT);
+    printf("[ETH] heth.gState = %d (should be 1=READY)\r\n", heth.gState);
     printf("[ETH] Before Start: RxBuildDescCnt=%lu\r\n", (unsigned long)heth.RxDescList.RxBuildDescCnt);
 
     /* 使用中断模式，与 ethernet_link_thread 保持一致 */
