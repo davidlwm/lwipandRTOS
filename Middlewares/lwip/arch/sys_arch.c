@@ -33,6 +33,7 @@
 /* lwIP includes. */
 #include "lwip/debug.h"
 #include "lwip/def.h"
+#include "lwip/arch.h"
 #include "lwip/sys.h"
 #include "lwip/mem.h"
 #include "lwip/stats.h"
