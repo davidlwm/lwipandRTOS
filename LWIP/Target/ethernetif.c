@@ -337,6 +337,17 @@ static void low_level_init(struct netif *netif)
     /* 使用中断模式，与 ethernet_link_thread 保持一致 */
     HAL_StatusTypeDef start_result = HAL_ETH_Start_IT(&heth);  // 使用中断模式
     printf("[ETH] HAL_ETH_Start_IT result: %d (0=OK)\r\n", start_result);
+
+    // 诊断：检查 DMA 和 MAC 状态
+    printf("[ETH] === Diagnostic Info ===\r\n");
+    printf("[ETH] DMAOMR: 0x%08lX\r\n", (unsigned long)heth.Instance->DMAOMR);
+    printf("[ETH] DMASR:  0x%08lX\r\n", (unsigned long)heth.Instance->DMASR);
+    printf("[ETH] DMAIER: 0x%08lX\r\n", (unsigned long)heth.Instance->DMAIER);
+    printf("[ETH] MACCR:  0x%08lX\r\n", (unsigned long)heth.Instance->MACCR);
+    printf("[ETH] MACFFR: 0x%08lX\r\n", (unsigned long)heth.Instance->MACFFR);
+    printf("[ETH] RxDesc: %p\r\n", heth.RxDescList.RxDesc);
+    printf("[ETH] ========================\r\n");
+
     netif_set_up(netif);
     netif_set_link_up(netif);
     printf("[ETH] ETH DMA started (interrupt mode), interface UP\r\n");
