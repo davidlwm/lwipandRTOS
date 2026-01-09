@@ -509,4 +509,14 @@ void sys_arch_unprotect(sys_prot_t pval)
   osMutexRelease(lwip_sys_mutex);
 }
 
+/* compatibility layer for old lwIP ports (stm32f407 project) */
+u32_t sys_now(void)
+{
+#if (osCMSIS < 0x20000U)
+  return osKernelSysTick();
+#else
+  return osKernelGetTickCount();
+#endif
+}
+
 #endif /* !NO_SYS */
