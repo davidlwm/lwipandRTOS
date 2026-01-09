@@ -338,6 +338,11 @@ static void low_level_init(struct netif *netif)
     HAL_StatusTypeDef start_result = HAL_ETH_Start_IT(&heth);  // 使用中断模式
     printf("[ETH] HAL_ETH_Start_IT result: %d (0=OK)\r\n", start_result);
 
+    // 临时修复：启用混杂模式以接收所有帧
+    printf("[ETH] Enabling promiscuous mode for debugging...\r\n");
+    SET_BIT(heth.Instance->MACFFR, ETH_MACFFR_PM);  // 启用混杂模式
+    printf("[ETH] MACFFR after: 0x%08lX\r\n", (unsigned long)heth.Instance->MACFFR);
+
     // 诊断：检查 DMA 和 MAC 状态
     printf("[ETH] === Diagnostic Info ===\r\n");
     printf("[ETH] DMAOMR: 0x%08lX\r\n", (unsigned long)heth.Instance->DMAOMR);
@@ -345,7 +350,20 @@ static void low_level_init(struct netif *netif)
     printf("[ETH] DMAIER: 0x%08lX\r\n", (unsigned long)heth.Instance->DMAIER);
     printf("[ETH] MACCR:  0x%08lX\r\n", (unsigned long)heth.Instance->MACCR);
     printf("[ETH] MACFFR: 0x%08lX\r\n", (unsigned long)heth.Instance->MACFFR);
+    printf("[ETH] MACA0HR: 0x%08lX\r\n", (unsigned long)heth.Instance->MACA0HR);
+    printf("[ETH] MACA0LR: 0x%08lX\r\n", (unsigned long)heth.Instance->MACA0LR);
     printf("[ETH] RxDesc: %p\r\n", heth.RxDescList.RxDesc);
+
+    // 解析 MAC 地址
+    uint32_t maca0hr = heth.Instance->MACA0HR;
+    uint32_t maca0lr = heth.Instance->MACA0LR;
+    printf("[ETH] MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
+           (unsigned int)(maca0lr & 0xFF),
+           (unsigned int)((maca0lr >> 8) & 0xFF),
+           (unsigned int)((maca0lr >> 16) & 0xFF),
+           (unsigned int)((maca0lr >> 24) & 0xFF),
+           (unsigned int)(maca0hr & 0xFF),
+           (unsigned int)((maca0hr >> 8) & 0xFF));
     printf("[ETH] ========================\r\n");
 
     netif_set_up(netif);
