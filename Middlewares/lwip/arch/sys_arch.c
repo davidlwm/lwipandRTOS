@@ -32,7 +32,6 @@
 
 /* lwIP includes. */
 #include "lwip/opt.h"
-#include "lwip/arch/sys_arch.h"
 #include "lwip/debug.h"
 #include "lwip/def.h"
 #include "lwip/sys.h"
