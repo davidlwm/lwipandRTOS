@@ -426,23 +426,11 @@
         <Group>
           <GroupName>Application/User/LWIP/Target</GroupName>
           <Files>
-            <File>
-              <FileName>ethernetif.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../LWIP/Target/ethernetif.c</FilePath>
-              <IncludeInBuild>0</IncludeInBuild>
-            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>Application/User/LWIP/App</GroupName>
           <Files>
-            <File>
-              <FileName>lwip.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../LWIP/App/lwip.c</FilePath>
-              <IncludeInBuild>0</IncludeInBuild>
-            </File>
           </Files>
         </Group>
         <Group>

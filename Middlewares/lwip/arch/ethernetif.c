@@ -44,7 +44,7 @@
  */
 
 #include "lwip/opt.h"
-#include "netif/etharp.h"  
+#include "netif/etharp.h"
 #include "lwip/def.h"
 #include "lwip/mem.h"
 #include "lwip/pbuf.h"
@@ -57,8 +57,9 @@
 #include "semphr.h"
 #include "task.h"
 #include "lwip/sys.h"
-#include "ethernetif.h" 
-#include "lwip_comm.h" 
+#include "ethernet.h"
+#include "ethernetif.h"
+#include "lwip_comm.h"
 #include "string.h"
 
 /* һź */
