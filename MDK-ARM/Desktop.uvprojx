@@ -464,11 +464,6 @@
           <GroupName>LWIP_ARCH</GroupName>
           <Files>
             <File>
-              <FileName>sys_arch.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Middlewares/lwip/arch/sys_arch.c</FilePath>
-            </File>
-            <File>
               <FileName>ethernetif.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Middlewares/lwip/arch/ethernetif.c</FilePath>
