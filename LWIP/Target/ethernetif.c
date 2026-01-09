@@ -142,13 +142,18 @@ void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *handlerEth)
 {
   static uint32_t rx_count = 0;
   rx_count++;
-  printf("[ETH IRQ] RX callback #%lu\r\n", rx_count);  // 移除限制，持续打印
+  printf("[ETH IRQ] RX callback #%lu\r\n", rx_count);
 
   // 检查信号量
   if (RxPktSemaphore == NULL) {
     printf("[ETH IRQ] ERROR: RxPktSemaphore is NULL!\r\n");
     return;
   }
+
+  // 检查描述符状态
+  printf("[ETH IRQ] RxBuildDescCnt=%lu, RxDescIdx=%lu\r\n",
+         (unsigned long)handlerEth->RxDescList.RxBuildDescCnt,
+         (unsigned long)handlerEth->RxDescList.RxDescIdx);
 
   osSemaphoreRelease(RxPktSemaphore);
   printf("[ETH IRQ] Semaphore released\r\n");
@@ -529,10 +534,29 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 static struct pbuf * low_level_input(struct netif *netif)
 {
   struct pbuf *p = NULL;
+  static uint32_t read_count = 0;
+
+  read_count++;
 
   if(RxAllocStatus == RX_ALLOC_OK)
   {
-    HAL_ETH_ReadData(&heth, (void **)&p);
+    HAL_StatusTypeDef result = HAL_ETH_ReadData(&heth, (void **)&p);
+    if (result != HAL_OK) {
+      printf("[LowLevelInput] #%lu: HAL_ETH_ReadData FAILED, result=%d\r\n",
+             read_count, result);
+    } else if (p != NULL) {
+      printf("[LowLevelInput] #%lu: SUCCESS, pbuf=%p, len=%u\r\n",
+             read_count, p, p->tot_len);
+    } else {
+      // HAL_OK but p == NULL means no packet available
+      if (read_count % 100 == 0) {
+        printf("[LowLevelInput] #%lu: No packet (OK)\r\n", read_count);
+      }
+    }
+  }
+  else
+  {
+    printf("[LowLevelInput] #%lu: RxAllocStatus ERROR!\r\n", read_count);
   }
 
   return p;
@@ -551,22 +575,36 @@ void ethernetif_input(void* argument)
 {
   struct pbuf *p = NULL;
   struct netif *netif = (struct netif *) argument;
+  static uint32_t input_count = 0;
 
   for( ;; )
   {
     if (osSemaphoreAcquire(RxPktSemaphore, TIME_WAITING_FOR_INPUT) == osOK)
     {
+      input_count++;
+      printf("[EthInput] #%lu: Semaphore acquired\r\n", input_count);
+
+      uint32_t packet_count = 0;
       do
       {
         p = low_level_input( netif );
         if (p != NULL)
         {
+          packet_count++;
+          printf("[EthInput] #%lu: Got packet %lu, len=%u\r\n",
+                 input_count, packet_count, p->tot_len);
+
           if (netif->input( p, netif) != ERR_OK )
           {
+            printf("[EthInput] #%lu: netif->input FAILED!\r\n", input_count);
             pbuf_free(p);
           }
         }
       } while(p!=NULL);
+
+      printf("[EthInput] #%lu: Processed %lu packets, RxBuildDescCnt=%lu\r\n",
+             input_count, packet_count,
+             (unsigned long)heth.RxDescList.RxBuildDescCnt);
     }
   }
 }
