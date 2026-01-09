@@ -98,8 +98,9 @@ LWIP_MEMPOOL_DECLARE(RX_POOL, ETH_RX_BUFFER_CNT, sizeof(RxBuff_t), "Zero-copy RX
 /* Variable Definitions */
 static uint8_t RxAllocStatus;
 
-ETH_DMADescTypeDef  DMARxDscrTab[ETH_RX_DESC_CNT]; /* Ethernet Rx DMA Descriptors */
-ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptors */
+/* 使用静态内存分配,强制4字节对齐,确保DMA可以正确访问 */
+static __ALIGNED(4) ETH_DMADescTypeDef  DMARxDscrTab[ETH_RX_DESC_CNT]; /* Ethernet Rx DMA Descriptors */
+static __ALIGNED(4) ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptors */
 
 /* USER CODE BEGIN 2 */
 
@@ -194,6 +195,24 @@ static void low_level_init(struct netif *netif)
   int32_t PHYLinkState = 0;
   ETH_MACConfigTypeDef MACConf = {0};
   /* Start ETH HAL Init */
+
+  /* 打印DMA描述符内存分配信息 */
+  printf("[ETH] Using STATIC memory allocation for DMA descriptors\r\n");
+  printf("[ETH] RX desc: %p (size=%d bytes)\r\n",
+         (void*)DMARxDscrTab, (int)(ETH_RX_DESC_CNT * sizeof(ETH_DMADescTypeDef)));
+  printf("[ETH] TX desc: %p (size=%d bytes)\r\n",
+         (void*)DMATxDscrTab, (int)(ETH_TX_DESC_CNT * sizeof(ETH_DMADescTypeDef)));
+
+  /* 检查对齐 */
+  printf("[ETH] Alignment check:\r\n");
+  printf("  RX desc: %saligned (addr & 3 = 0x%lX)\r\n",
+         ((uint32_t)DMARxDscrTab & 0x3) ? "NOT " : "",
+         (uint32_t)DMARxDscrTab & 0x3);
+  printf("  TX desc: %saligned (addr & 3 = 0x%lX)\r\n",
+         ((uint32_t)DMATxDscrTab & 0x3) ? "NOT " : "",
+         (uint32_t)DMATxDscrTab & 0x3);
+  printf("  In SRAM: %s\r\n",
+         (((uint32_t)DMARxDscrTab >= 0x20000000 && (uint32_t)DMARxDscrTab < 0x20020000)) ? "YES" : "NO");
 
    uint8_t MACAddr[6] ;
   heth.Instance = ETH;
