@@ -130,11 +130,11 @@ uint8_t lwip_comm_init(void)
     IP4_ADDR(&ipaddr, g_lwipdev.ip[0], g_lwipdev.ip[1], g_lwipdev.ip[2], g_lwipdev.ip[3]);
     IP4_ADDR(&netmask, g_lwipdev.netmask[0], g_lwipdev.netmask[1], g_lwipdev.netmask[2], g_lwipdev.netmask[3]);
     IP4_ADDR(&gw, g_lwipdev.gateway[0], g_lwipdev.gateway[1], g_lwipdev.gateway[2], g_lwipdev.gateway[3]);
-    printf("enMACַΪ:................%d.%d.%d.%d.%d.%d\r\n", g_lwipdev.mac[0], g_lwipdev.mac[1], g_lwipdev.mac[2], g_lwipdev.mac[3], g_lwipdev.mac[4], g_lwipdev.mac[5]);
-    printf("̬IPַ........................%d.%d.%d.%d\r\n", g_lwipdev.ip[0], g_lwipdev.ip[1], g_lwipdev.ip[2], g_lwipdev.ip[3]);
+    printf("enMAC地址为:................%d.%d.%d.%d.%d.%d\r\n", g_lwipdev.mac[0], g_lwipdev.mac[1], g_lwipdev.mac[2], g_lwipdev.mac[3], g_lwipdev.mac[4], g_lwipdev.mac[5]);
+    printf("静态IP地址........................%d.%d.%d.%d\r\n", g_lwipdev.ip[0], g_lwipdev.ip[1], g_lwipdev.ip[2], g_lwipdev.ip[3]);
 
     g_lwipdev.dhcpstatus = 0XFF;
-    g_lwipdev.lwip_display_fn(2);
+    // g_lwipdev.lwip_display_fn(2);  /* 未知函数指针，注释掉 */
 #endif
 
     // 6. 添加网络接口
@@ -314,7 +314,7 @@ void lwip_periodic_handle(void *argument)
                         g_lwipdev.gateway[0] = (uint8_t)(gw);
                         printf("ͨDHCPȡĬ..........%d.%d.%d.%d\r\n", g_lwipdev.gateway[0], g_lwipdev.gateway[1], g_lwipdev.gateway[2], g_lwipdev.gateway[3]);
                         
-                        g_lwipdev.lwip_display_fn(2);
+                        // g_lwipdev.lwip_display_fn(2);  /* 未知函数指针，注释掉 */
                     }
                 }
                 else
@@ -335,7 +335,7 @@ void lwip_periodic_handle(void *argument)
                         sprintf((char *)iptxt, "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
                         printf ("DHCP Timeout !! \r\n");
                         printf ("Static IP address: %s\r\n", iptxt);
-                        g_lwipdev.lwip_display_fn(2);
+                        // g_lwipdev.lwip_display_fn(2);  /* 未知函数指针，注释掉 */
                     }
                 }
             }
