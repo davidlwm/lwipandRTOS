@@ -1280,16 +1280,15 @@ static void ETH_UpdateDescriptor(ETH_HandleTypeDef *heth)
 
   if (heth->RxDescList.RxBuildDescCnt != desccount)
   {
-    /* Set the tail pointer index */
-    tailidx = (ETH_RX_DESC_CNT + descidx - 1U) % ETH_RX_DESC_CNT;
-
-    printf("[ETH_UpdateDesc] Updating tail pointer: tailidx=%lu\r\n", (unsigned long)tailidx);
+    /* STM32F4: DMARPDR is Receive Poll Demand, not tail pointer */
+    /* Write any value to trigger DMA to check descriptors */
+    printf("[ETH_UpdateDesc] Triggering DMA poll demand\r\n");
 
     /* DMB instruction to avoid race condition */
     __DMB();
 
-    /* Set the Tail pointer address */
-    WRITE_REG(heth->Instance->DMARPDR, ((uint32_t)(heth->Init.RxDesc + (tailidx))));
+    /* Trigger DMA to resume reception (write any value) */
+    WRITE_REG(heth->Instance->DMARPDR, 0);
 
     heth->RxDescList.RxBuildDescIdx = descidx;
     heth->RxDescList.RxBuildDescCnt = desccount;
