@@ -344,29 +344,41 @@ static void low_level_init(struct netif *netif)
 
     // 修复：如果 RxBuildDescCnt 是 0，手动设置并更新描述符
     if (heth.RxDescList.RxBuildDescCnt == 0) {
-        printf("[ETH] FIXING: RxBuildDescCnt is 0, manually setting to %d\r\n", ETH_RX_DESC_CNT);
-        heth.RxDescList.RxBuildDescCnt = ETH_RX_DESC_CNT;
-        heth.RxDescList.RxBuildDescIdx = 0;
+        printf("[ETH] FIXING: RxBuildDescCnt is 0, manually initializing descriptors\r\n");
 
-        // 手动初始化所有 RX 描述符
+        // 直接操作 DMARxDscrTab 数组
         for (uint32_t i = 0; i < ETH_RX_DESC_CNT; i++) {
-            ETH_DMADescTypeDef *dmarxdesc = (ETH_DMADescTypeDef *)heth.RxDescList.RxDesc[i];
             uint8_t *buff = NULL;
 
             HAL_ETH_RxAllocateCallback(&buff);
             if (buff != NULL) {
-                dmarxdesc->BackupAddr0 = (uint32_t)buff;
-                dmarxdesc->DESC2 = (uint32_t)buff;
-                dmarxdesc->DESC1 = heth.Init.RxBuffLen | (1 << 14);  // RCH bit
-                dmarxdesc->DESC0 = (1U << 31);  // OWN bit
-                printf("[ETH] RxDesc[%lu] initialized: DESC0=0x%08lX\r\n", i, dmarxdesc->DESC0);
+                DMARxDscrTab[i].BackupAddr0 = (uint32_t)buff;
+                DMARxDscrTab[i].DESC2 = (uint32_t)buff;
+                DMARxDscrTab[i].DESC1 = heth.Init.RxBuffLen | (1 << 14);  // RCH bit
+                DMARxDscrTab[i].DESC0 = (1U << 31);  // OWN bit
+
+                // 设置链表指针
+                if (i < ETH_RX_DESC_CNT - 1) {
+                    DMARxDscrTab[i].DESC3 = (uint32_t)&DMARxDscrTab[i + 1];
+                } else {
+                    DMARxDscrTab[i].DESC3 = (uint32_t)&DMARxDscrTab[0];  // 循环
+                }
+
+                printf("[ETH] DMARxDscrTab[%lu]: DESC0=0x%08lX, DESC2=0x%08lX\r\n",
+                       i, DMARxDscrTab[i].DESC0, DMARxDscrTab[i].DESC2);
             }
         }
 
         // 设置 DMA 接收描述符列表地址
-        WRITE_REG(heth.Instance->DMARDLAR, (uint32_t)heth.RxDescList.RxDesc[0]);
+        WRITE_REG(heth.Instance->DMARDLAR, (uint32_t)&DMARxDscrTab[0]);
+
+        // 更新 RxDescList
+        heth.RxDescList.RxBuildDescCnt = 0;  // 已经全部构建完成
+        heth.RxDescList.RxBuildDescIdx = 0;
+        heth.RxDescList.RxDesc[0] = (uint32_t)&DMARxDscrTab[0];
 
         printf("[ETH] Manual descriptor initialization complete\r\n");
+        printf("[ETH] DMARDLAR set to: 0x%08lX\r\n", (unsigned long)heth.Instance->DMARDLAR);
     }
 
     // 等待描述符初始化完成
