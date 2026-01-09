@@ -243,7 +243,9 @@ uint32_t  ethernet_get_eth_rx_size(ETH_DMADescTypeDef *dma_rx_desc)
  */
 uint8_t ethernet_mem_malloc(void)
 {
-    if ((g_eth_dma_rx_dscr_tab || g_eth_dma_tx_dscr_tab || g_eth_rx_buf || g_eth_tx_buf) == NULL)
+    /* Check if any of the buffers are already allocated */
+    if (g_eth_dma_rx_dscr_tab == NULL && g_eth_dma_tx_dscr_tab == NULL &&
+        g_eth_rx_buf == NULL && g_eth_tx_buf == NULL)
     {
         g_eth_dma_rx_dscr_tab = (ETH_DMADescTypeDef *)malloc(ETH_RXBUFNB * sizeof(ETH_DMADescTypeDef));         /* ڴ */
         g_eth_dma_tx_dscr_tab = (ETH_DMADescTypeDef *)malloc(ETH_TXBUFNB * sizeof(ETH_DMADescTypeDef));         /* ڴ */
