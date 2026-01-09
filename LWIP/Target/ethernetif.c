@@ -422,14 +422,16 @@ static void low_level_init(struct netif *netif)
 
     // 检查 RX 描述符
     printf("[ETH] === RX Descriptor Info ===\r\n");
-    printf("[ETH] RxDescList.RxDesc: %p\r\n", heth.RxDescList.RxDesc);
-    if (heth.RxDescList.RxDesc != NULL) {
-        ETH_DMADescTypeDef *rxdesc = (ETH_DMADescTypeDef *)heth.RxDescList.RxDesc;
-        for (int i = 0; i < 4 && i < ETH_RX_DESC_CNT; i++) {
-            printf("[ETH] RxDesc[%d]: DESC0=0x%08lX, DESC2=0x%08lX\r\n",
-                   i,
-                   (unsigned long)rxdesc[i].DESC0,  // Status/Control
-                   (unsigned long)rxdesc[i].DESC2); // Buffer1 Address
+    printf("[ETH] RxDescList.RxDesc[0]: %p\r\n", (void*)heth.RxDescList.RxDesc[0]);
+    for (int i = 0; i < ETH_RX_DESC_CNT; i++) {
+        ETH_DMADescTypeDef *rxdesc = (ETH_DMADescTypeDef *)heth.RxDescList.RxDesc[i];
+        if (rxdesc != NULL) {
+            printf("[ETH] RxDesc[%d] @ %p: DESC0=0x%08lX, DESC2=0x%08lX\r\n",
+                   i, rxdesc,
+                   (unsigned long)rxdesc->DESC0,  // Status/Control
+                   (unsigned long)rxdesc->DESC2); // Buffer1 Address
+        } else {
+            printf("[ETH] RxDesc[%d]: NULL\r\n", i);
         }
     }
     printf("[ETH] ========================\r\n");

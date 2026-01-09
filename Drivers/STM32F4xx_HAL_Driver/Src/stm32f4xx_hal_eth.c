@@ -772,8 +772,11 @@ HAL_StatusTypeDef HAL_ETH_Start_IT(ETH_HandleTypeDef *heth)
 {
   uint32_t tmpreg1;
 
+  printf("[HAL_ETH_Start_IT] Entry: gState=0x%02X\r\n", heth->gState);
+
   if (heth->gState == HAL_ETH_STATE_READY)
   {
+    printf("[HAL_ETH_Start_IT] State is READY, proceeding...\r\n");
     heth->gState = HAL_ETH_STATE_BUSY;
 
     /* save IT mode to ETH Handle */
@@ -781,9 +784,13 @@ HAL_StatusTypeDef HAL_ETH_Start_IT(ETH_HandleTypeDef *heth)
 
     /* Set number of descriptors to build */
     heth->RxDescList.RxBuildDescCnt = ETH_RX_DESC_CNT;
+    printf("[HAL_ETH_Start_IT] Set RxBuildDescCnt=%u\r\n", ETH_RX_DESC_CNT);
 
     /* Build all descriptors */
+    printf("[HAL_ETH_Start_IT] Calling ETH_UpdateDescriptor...\r\n");
     ETH_UpdateDescriptor(heth);
+    printf("[HAL_ETH_Start_IT] After ETH_UpdateDescriptor: RxBuildDescCnt=%lu\r\n",
+           (unsigned long)heth->RxDescList.RxBuildDescCnt);
 
     /* Wait until the write operation will be taken into account :
     at least four TX_CLK/RX_CLK clock cycles */
@@ -1212,11 +1219,15 @@ static void ETH_UpdateDescriptor(ETH_HandleTypeDef *heth)
   dmarxdesc = (ETH_DMADescTypeDef *)heth->RxDescList.RxDesc[descidx];
   desccount = heth->RxDescList.RxBuildDescCnt;
 
+  printf("[ETH_UpdateDesc] Entry: descidx=%lu, desccount=%lu, dmarxdesc=%p\r\n",
+         (unsigned long)descidx, (unsigned long)desccount, dmarxdesc);
+
   while ((desccount > 0U) && (allocStatus != 0U))
   {
     /* Check if a buffer's attached the descriptor */
     if (READ_REG(dmarxdesc->BackupAddr0) == 0U)
     {
+      printf("[ETH_UpdateDesc] Descriptor %lu needs buffer\r\n", descidx);
       /* Get a new buffer. */
 #if (USE_HAL_ETH_REGISTER_CALLBACKS == 1)
       /*Call registered Allocate callback*/
@@ -1227,13 +1238,20 @@ static void ETH_UpdateDescriptor(ETH_HandleTypeDef *heth)
 #endif  /* USE_HAL_ETH_REGISTER_CALLBACKS */
       if (buff == NULL)
       {
+        printf("[ETH_UpdateDesc] Buffer allocation FAILED!\r\n");
         allocStatus = 0U;
       }
       else
       {
+        printf("[ETH_UpdateDesc] Buffer allocated: %p\r\n", buff);
         WRITE_REG(dmarxdesc->BackupAddr0, (uint32_t)buff);
         WRITE_REG(dmarxdesc->DESC2, (uint32_t)buff);
       }
+    }
+    else
+    {
+      printf("[ETH_UpdateDesc] Descriptor %lu already has buffer: 0x%08lX\r\n",
+             descidx, (unsigned long)dmarxdesc->BackupAddr0);
     }
 
     if (allocStatus != 0U)
@@ -1257,10 +1275,15 @@ static void ETH_UpdateDescriptor(ETH_HandleTypeDef *heth)
     }
   }
 
+  printf("[ETH_UpdateDesc] Loop exit: desccount=%lu, allocStatus=%u\r\n",
+         (unsigned long)desccount, allocStatus);
+
   if (heth->RxDescList.RxBuildDescCnt != desccount)
   {
     /* Set the tail pointer index */
     tailidx = (ETH_RX_DESC_CNT + descidx - 1U) % ETH_RX_DESC_CNT;
+
+    printf("[ETH_UpdateDesc] Updating tail pointer: tailidx=%lu\r\n", (unsigned long)tailidx);
 
     /* DMB instruction to avoid race condition */
     __DMB();
@@ -1270,6 +1293,13 @@ static void ETH_UpdateDescriptor(ETH_HandleTypeDef *heth)
 
     heth->RxDescList.RxBuildDescIdx = descidx;
     heth->RxDescList.RxBuildDescCnt = desccount;
+
+    printf("[ETH_UpdateDesc] Updated: RxBuildDescIdx=%lu, RxBuildDescCnt=%lu\r\n",
+           (unsigned long)descidx, (unsigned long)desccount);
+  }
+  else
+  {
+    printf("[ETH_UpdateDesc] No update needed (RxBuildDescCnt unchanged)\r\n");
   }
 }
 
