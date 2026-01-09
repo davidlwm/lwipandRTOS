@@ -784,12 +784,6 @@
               <FilePath>../Middlewares/Third_Party/LwIP/src/netif/lowpan6_common.c</FilePath>
             </File>
             <File>
-              <FileName>slipif.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Middlewares/Third_Party/LwIP/src/netif/slipif.c</FilePath>
-              <IncludeInBuild>0</IncludeInBuild>
-            </File>
-            <File>
               <FileName>zepif.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Middlewares/Third_Party/LwIP/src/netif/zepif.c</FilePath>
