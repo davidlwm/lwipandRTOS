@@ -24,7 +24,7 @@
  
 #ifndef _LWIP_COMM_H
 #define _LWIP_COMM_H
-#include "ethernet.h"
+#include "ethernet_bsp.h"
 
 
 /* DHCP����״̬ */

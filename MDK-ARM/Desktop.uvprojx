@@ -454,9 +454,9 @@
           <GroupName>ETHERNET_DRIVER</GroupName>
           <Files>
             <File>
-              <FileName>ethernet.c</FileName>
+              <FileName>ethernet_bsp.c</FileName>
               <FileType>1</FileType>
-              <FilePath>../Drivers/BSP/ETHERNET/ethernet.c</FilePath>
+              <FilePath>../Drivers/BSP/ETHERNET/ethernet_bsp.c</FilePath>
             </File>
           </Files>
         </Group>

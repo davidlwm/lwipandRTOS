@@ -57,7 +57,7 @@
 #include "semphr.h"
 #include "task.h"
 #include "lwip/sys.h"
-#include "ethernet.h"
+#include "ethernet_bsp.h"
 #include "ethernetif.h"
 #include "lwip_comm.h"
 #include "string.h"

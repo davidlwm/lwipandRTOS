@@ -10,7 +10,7 @@
  ****************************************************************************************************
  */
 
-#include "ethernet.h"
+#include "ethernet_bsp.h"
 #include "lwip_comm.h"
 #include "stm32f4xx_hal.h"
 #include <stdlib.h>

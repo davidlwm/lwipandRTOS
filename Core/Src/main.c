@@ -26,6 +26,7 @@
 #include "tcp_echo_server.h"
 #include "retarget.h"
 #include "lwip_comm.h"
+#include "ethernet_bsp.h"
 #include "ethernetif.h"
 /* USER CODE END Includes */
 
