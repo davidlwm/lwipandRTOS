@@ -17,11 +17,24 @@
 #include <string.h>
 
 
-ETH_HandleTypeDef g_eth_handler;            /* ̫ */
-ETH_DMADescTypeDef *g_eth_dma_rx_dscr_tab;  /* ̫DMAݽṹָ */
-ETH_DMADescTypeDef *g_eth_dma_tx_dscr_tab;  /* ̫DMAݽṹָ */
-uint8_t *g_eth_rx_buf;                      /* ̫ײbuffersָ */
-uint8_t *g_eth_tx_buf;                      /* ̫ײbuffersָ */
+ETH_HandleTypeDef g_eth_handler;            /* 以太网 */
+ETH_DMADescTypeDef *g_eth_dma_rx_dscr_tab;  /* 以太网DMA接收结构指针 */
+ETH_DMADescTypeDef *g_eth_dma_tx_dscr_tab;  /* 以太网DMA发送结构指针 */
+uint8_t *g_eth_rx_buf;                      /* 以太网底层buffers指针 */
+uint8_t *g_eth_tx_buf;                      /* 以太网底层buffers指针 */
+
+/* 使用静态内存分配，确保DMA兼容（和老项目mymalloc一样） */
+#if (osCMSIS < 0x20000U)
+static __align(4) uint8_t eth_rx_buf_mem[ETH_RX_BUF_SIZE * ETH_RXBUFNB];
+static __align(4) uint8_t eth_tx_buf_mem[ETH_TX_BUF_SIZE * ETH_TXBUFNB];
+static __align(4) ETH_DMADescTypeDef eth_dma_rx_dscr_tab_mem[ETH_RXBUFNB];
+static __align(4) ETH_DMADescTypeDef eth_dma_tx_dscr_tab_mem[ETH_TXBUFNB];
+#else
+static __ALIGNED(4) uint8_t eth_rx_buf_mem[ETH_RX_BUF_SIZE * ETH_RXBUFNB];
+static __ALIGNED(4) uint8_t eth_tx_buf_mem[ETH_TX_BUF_SIZE * ETH_TXBUFNB];
+static __ALIGNED(4) ETH_DMADescTypeDef eth_dma_rx_dscr_tab_mem[ETH_RXBUFNB];
+static __ALIGNED(4) ETH_DMADescTypeDef eth_dma_tx_dscr_tab_mem[ETH_TXBUFNB];
+#endif
 
 
 /**
@@ -255,68 +268,64 @@ uint32_t  ethernet_get_eth_rx_size(ETH_DMADescTypeDef *dma_rx_desc)
  */
 uint8_t ethernet_mem_malloc(void)
 {
-    /* Check if any of the buffers are already allocated */
+    /* 使用静态内存分配，不需要malloc */
     if (g_eth_dma_rx_dscr_tab == NULL && g_eth_dma_tx_dscr_tab == NULL &&
         g_eth_rx_buf == NULL && g_eth_tx_buf == NULL)
     {
-        printf("Allocating ETH DMA buffers...\r\n");
+        printf("[ETH] Using STATIC memory allocation (DMA-friendly)\r\n");
 
-        g_eth_dma_rx_dscr_tab = (ETH_DMADescTypeDef *)malloc(ETH_RXBUFNB * sizeof(ETH_DMADescTypeDef));
-        printf("RX desc: %p\r\n", (void*)g_eth_dma_rx_dscr_tab);
+        /* 直接指向静态数组 */
+        g_eth_dma_rx_dscr_tab = eth_dma_rx_dscr_tab_mem;
+        g_eth_dma_tx_dscr_tab = eth_dma_tx_dscr_tab_mem;
+        g_eth_rx_buf = eth_rx_buf_mem;
+        g_eth_tx_buf = eth_tx_buf_mem;
 
-        g_eth_dma_tx_dscr_tab = (ETH_DMADescTypeDef *)malloc(ETH_TXBUFNB * sizeof(ETH_DMADescTypeDef));
-        printf("TX desc: %p\r\n", (void*)g_eth_dma_tx_dscr_tab);
+        printf("[ETH] RX desc: %p (size=%zu bytes)\r\n",
+               (void*)g_eth_dma_rx_dscr_tab, sizeof(eth_dma_rx_dscr_tab_mem));
+        printf("[ETH] TX desc: %p (size=%zu bytes)\r\n",
+               (void*)g_eth_dma_tx_dscr_tab, sizeof(eth_dma_tx_dscr_tab_mem));
+        printf("[ETH] RX buf: %p (size=%d bytes)\r\n",
+               (void*)g_eth_rx_buf, ETH_RX_BUF_SIZE * ETH_RXBUFNB);
+        printf("[ETH] TX buf: %p (size=%d bytes)\r\n",
+               (void*)g_eth_tx_buf, ETH_TX_BUF_SIZE * ETH_TXBUFNB);
 
-        g_eth_rx_buf = (uint8_t *)malloc(ETH_RX_BUF_SIZE * ETH_RXBUFNB);
-        printf("RX buf: %p (size=%d)\r\n", (void*)g_eth_rx_buf, ETH_RX_BUF_SIZE * ETH_RXBUFNB);
+        /* 检查4字节对齐（DMA要求） */
+        printf("[ETH] Alignment check:\r\n");
+        printf("  RX desc: %saligned (addr & 3 = 0x%lX)\r\n",
+               ((uint32_t)g_eth_dma_rx_dscr_tab & 0x3) ? "NOT " : "",
+               (uint32_t)g_eth_dma_rx_dscr_tab & 0x3);
+        printf("  TX desc: %saligned (addr & 3 = 0x%lX)\r\n",
+               ((uint32_t)g_eth_dma_tx_dscr_tab & 0x3) ? "NOT " : "",
+               (uint32_t)g_eth_dma_tx_dscr_tab & 0x3);
+        printf("  RX buf:  %saligned (addr & 3 = 0x%lX)\r\n",
+               ((uint32_t)g_eth_rx_buf & 0x3) ? "NOT " : "",
+               (uint32_t)g_eth_rx_buf & 0x3);
+        printf("  TX buf:  %saligned (addr & 3 = 0x%lX)\r\n",
+               ((uint32_t)g_eth_tx_buf & 0x3) ? "NOT " : "",
+               (uint32_t)g_eth_tx_buf & 0x3);
 
-        g_eth_tx_buf = (uint8_t *)malloc(ETH_TX_BUF_SIZE * ETH_TXBUFNB);
-        printf("TX buf: %p (size=%d)\r\n", (void*)g_eth_tx_buf, ETH_TX_BUF_SIZE * ETH_TXBUFNB);
+        /* 清零静态内存 */
+        memset(g_eth_dma_rx_dscr_tab, 0, sizeof(eth_dma_rx_dscr_tab_mem));
+        memset(g_eth_dma_tx_dscr_tab, 0, sizeof(eth_dma_tx_dscr_tab_mem));
+        memset(g_eth_rx_buf, 0, sizeof(eth_rx_buf_mem));
+        memset(g_eth_tx_buf, 0, sizeof(eth_tx_buf_mem));
 
-        if (g_eth_dma_rx_dscr_tab == NULL || g_eth_dma_tx_dscr_tab == NULL ||
-            g_eth_rx_buf == NULL || g_eth_tx_buf == NULL)
-        {
-            printf("ERROR: Memory allocation failed!\r\n");
-            printf("  RX desc: %s\r\n", g_eth_dma_rx_dscr_tab ? "OK" : "FAIL");
-            printf("  TX desc: %s\r\n", g_eth_dma_tx_dscr_tab ? "OK" : "FAIL");
-            printf("  RX buf: %s\r\n", g_eth_rx_buf ? "OK" : "FAIL");
-            printf("  TX buf: %s\r\n", g_eth_tx_buf ? "OK" : "FAIL");
-            ethernet_mem_free();
-            return 1;
-        }
-
-        memset(g_eth_dma_rx_dscr_tab, 0, ETH_RXBUFNB * sizeof(ETH_DMADescTypeDef));
-        memset(g_eth_dma_tx_dscr_tab, 0, ETH_TXBUFNB * sizeof(ETH_DMADescTypeDef));
-        memset(g_eth_rx_buf, 0, ETH_RX_BUF_SIZE * ETH_RXBUFNB);
-        memset(g_eth_tx_buf, 0, ETH_TX_BUF_SIZE * ETH_TXBUFNB);
-
-        printf("All ETH buffers allocated successfully\r\n");
+        printf("[ETH] All STATIC buffers ready\r\n");
     }
 
     return 0;
 }
 
 /**
- * @breif       ͷETH ײڴ
- * @param       
- * @retval      
+ * @breif       释放ETH 底层内存
+ * @param
+ * @retval
  */
 void ethernet_mem_free(void)
 {
-    if (g_eth_dma_rx_dscr_tab) {
-        free(g_eth_dma_rx_dscr_tab);
-        g_eth_dma_rx_dscr_tab = NULL;
-    }
-    if (g_eth_dma_tx_dscr_tab) {
-        free(g_eth_dma_tx_dscr_tab);
-        g_eth_dma_tx_dscr_tab = NULL;
-    }
-    if (g_eth_rx_buf) {
-        free(g_eth_rx_buf);
-        g_eth_rx_buf = NULL;
-    }
-    if (g_eth_tx_buf) {
-        free(g_eth_tx_buf);
-        g_eth_tx_buf = NULL;
-    }
+    /* 静态内存不需要释放，只需重置指针 */
+    g_eth_dma_rx_dscr_tab = NULL;
+    g_eth_dma_tx_dscr_tab = NULL;
+    g_eth_rx_buf = NULL;
+    g_eth_tx_buf = NULL;
 }

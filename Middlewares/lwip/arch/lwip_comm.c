@@ -121,6 +121,16 @@ uint8_t lwip_comm_init(void)
     }
     printf("[INIT] Ethernet PHY initialized successfully\r\n");
 
+    /* 额外的PHY稳定延时，解决电源不稳定问题 */
+    printf("[INIT] Waiting for PHY to stabilize...\r\n");
+    vTaskDelay(500);  /* 等待500ms让PHY完全稳定 */
+
+    /* PHY软复位，确保从干净状态开始 */
+    printf("[INIT] Performing PHY soft reset...\r\n");
+    ethernet_write_phy(0, 0x8000);  /* PHY Basic Control Register, bit 15 = Soft Reset */
+    vTaskDelay(200);  /* 等待软复位完成 */
+    printf("[INIT] PHY soft reset complete\r\n");
+
     // 5. IP
 #if LWIP_DHCP                                   /* ʹö̬IP */
     ip_addr_set_zero_ip4(&ipaddr);              /* IPַ뼰 */
