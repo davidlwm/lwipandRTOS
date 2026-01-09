@@ -366,13 +366,25 @@ void lwip_link_thread( void * argument )
     struct netif *netif = (struct netif *) argument;
     int link_again_num = 0;
     uint32_t heartbeat_counter = 0;
+    uint32_t phy_read_count = 0;
 
     printf("[LINK] Thread started, monitoring PHY link status...\r\n");
 
     while(1)
     {
         /* 获取PHY状态寄存器取信息 */
-        HAL_ETH_ReadPHYRegister(&g_eth_handler,PHY_BSR, &regval);
+        if (HAL_ETH_ReadPHYRegister(&g_eth_handler, PHY_BSR, &regval) == HAL_OK)
+        {
+            phy_read_count++;
+            if (phy_read_count % 25 == 0)  /* 每5秒打印一次PHY寄存器值 */
+            {
+                printf("[LINK] PHY BSR Register: 0x%04X\r\n", (unsigned int)regval);
+            }
+        }
+        else
+        {
+            printf("[LINK] ERROR: Failed to read PHY register!\r\n");
+        }
 
         /* 判断状态 */
         if((regval & PHY_LINKED_STATUS) == 0)
@@ -389,7 +401,8 @@ void lwip_link_thread( void * argument )
                     dhcp_stop(netif);
 #endif
                     printf("[LINK] Cable DISCONNECTED\r\n");
-                    HAL_ETH_Stop(&g_eth_handler);
+                    /* 不要停止ETH，只是设置netif状态 */
+                    /* HAL_ETH_Stop(&g_eth_handler);  // ETH一直在运行 */
                     netif_set_down(netif);
                     netif_set_link_down(netif);
                     link_again_num = 0;
@@ -403,11 +416,13 @@ void lwip_link_thread( void * argument )
             if (g_lwipdev.link_status == LWIP_LINK_OFF)/* 以太网 */
             {
                 printf("[LINK] Cable CONNECTED\r\n");
-                printf("[LINK] Starting Ethernet MAC...\r\n");
+                printf("[LINK] Setting netif UP...\r\n");
                 g_lwipdev.link_status = LWIP_LINK_ON;
-                HAL_ETH_Start(&g_eth_handler);
+                /* ETH已经在low_level_init中启动了，这里不需要再调用HAL_ETH_Start */
+                /* HAL_ETH_Start(&g_eth_handler);  // 不要重复启动 */
                 netif_set_up(netif);
                 netif_set_link_up(netif);
+                printf("[LINK] Netif is now UP and RUNNING\r\n");
             }
         }
 

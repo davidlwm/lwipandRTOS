@@ -207,13 +207,25 @@ extern void lwip_pkt_handle(void);                  /* lwip_comm.c涨 */
  */
 void ETH_IRQHandler(void)
 {
+    static uint32_t irq_count = 0;
+
+    irq_count++;
+
     if (ethernet_get_eth_rx_size(g_eth_handler.RxDesc))
     {
-        lwip_pkt_handle();      /* ̫ݣύLWIP */
+        lwip_pkt_handle();      /* 以太网数据，提交LWIP */
+    }
+    else
+    {
+        /* Interrupt but no data - might be TX completion */
+        if (irq_count % 100 == 0)
+        {
+            printf("[ETH] IRQ count: %lu (TX or spurious)\r\n", irq_count);
+        }
     }
 
-    __HAL_ETH_DMA_CLEAR_IT(&g_eth_handler, ETH_DMA_IT_NIS);   /* DMAжϱ־λ */
-    __HAL_ETH_DMA_CLEAR_IT(&g_eth_handler, ETH_DMA_IT_R);     /* DMAжϱ־λ */
+    __HAL_ETH_DMA_CLEAR_IT(&g_eth_handler, ETH_DMA_IT_NIS);   /* DMA中断标志位 */
+    __HAL_ETH_DMA_CLEAR_IT(&g_eth_handler, ETH_DMA_IT_R);     /* DMA中断标志位 */
 }
 
 /**
