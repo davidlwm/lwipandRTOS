@@ -112,11 +112,14 @@ uint8_t lwip_comm_init(void)
     // 3. ĬIP
     lwip_comm_default_ip_set(&g_lwipdev);         /* ĬIPϢ */
 
-    // 4. ʼ̫оƬʧܺѭ
-    while (ethernet_init())                     /* ʼ̫оƬ,ʧܵĻ5 */
+    // 4. 初始化太网芯片，失败后循环
+    printf("[INIT] Initializing Ethernet PHY...\r\n");
+    while (ethernet_init())                     /* 初始化太网芯片,失败的话延时 */
     {
+        printf("[INIT] Ethernet init failed, retrying...\r\n");
         vTaskDelay(100);
     }
+    printf("[INIT] Ethernet PHY initialized successfully\r\n");
 
     // 5. IP
 #if LWIP_DHCP                                   /* ʹö̬IP */
@@ -132,19 +135,23 @@ uint8_t lwip_comm_init(void)
 
     g_lwipdev.dhcpstatus = 0XFF;
     g_lwipdev.lwip_display_fn(2);
-#endif  
+#endif
 
-    // 6. 
+    // 6. 添加网络接口
+    printf("[INIT] Adding network interface...\r\n");
     netif_init_flag = netif_add(&g_lwip_netif, (const ip_addr_t *)&ipaddr, (const ip_addr_t *)&netmask, (const ip_addr_t *)&gw, NULL, &ethernetif_init, &tcpip_input);
 
     if (netif_init_flag == NULL)
     {
-        return 2;                           /* ʧ */
+        printf("[INIT] ERROR: netif_add FAILED!\r\n");
+        return 2;                           /* 失败 */
     }
 
-    // 7.   
-    /* ӳɹ,netifΪĬֵ,Ҵnetif */
-    netif_set_default(&g_lwip_netif);       /* netifΪĬ */
+    printf("[INIT] Network interface added successfully\r\n");
+
+    // 7. 设置网络接口
+    /* 连接成功,netif为默认值,并使能netif */
+    netif_set_default(&g_lwip_netif);       /* netif为默认 */
 
     if (netif_is_link_up(&g_lwip_netif))
     {
@@ -155,17 +162,25 @@ uint8_t lwip_comm_init(void)
         netif_set_down(&g_lwip_netif);
     }
 
-    // 8. ״̬߳        
+    // 8. 链路状态线程
 #if LWIP_NETIF_LINK_CALLBACK
-        lwip_link_status_updated(&g_lwip_netif);    /* DHCP״̬º */
+        printf("[INIT] Starting link monitoring thread...\r\n");
+        lwip_link_status_updated(&g_lwip_netif);    /* DHCP状态回调 */
         netif_set_link_callback(&g_lwip_netif, lwip_link_status_updated);
 
-        /* ѯPHY״̬ */
-        sys_thread_new("eth_link",
-                       lwip_link_thread,            /* ں */
-                       &g_lwip_netif,               /* ں */
-                       LWIP_LINK_STK_SIZE,          /* ջС */
-                       LWIP_LINK_TASK_PRIO);        /* ȼ */
+        /* 查询PHY状态 */
+        if (sys_thread_new("eth_link",
+                       lwip_link_thread,            /* 线程入口 */
+                       &g_lwip_netif,               /* 线程参数 */
+                       LWIP_LINK_STK_SIZE,          /* 栈大小 */
+                       LWIP_LINK_TASK_PRIO) == NULL)
+        {
+            printf("[INIT] ERROR: Failed to create link thread!\r\n");
+        }
+        else
+        {
+            printf("[INIT] Link thread created successfully\r\n");
+        }
 #endif
     
     g_lwipdev.link_status = LWIP_LINK_OFF;          /* ӱΪ0 */
