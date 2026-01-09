@@ -338,6 +338,9 @@ static void low_level_init(struct netif *netif)
     HAL_StatusTypeDef start_result = HAL_ETH_Start_IT(&heth);  // 使用中断模式
     printf("[ETH] HAL_ETH_Start_IT result: %d (0=OK)\r\n", start_result);
 
+    // 等待描述符初始化完成
+    osDelay(10);
+
     // 临时修复：启用混杂模式以接收所有帧
     printf("[ETH] Enabling promiscuous mode for debugging...\r\n");
     SET_BIT(heth.Instance->MACFFR, ETH_MACFFR_PM);  // 启用混杂模式
@@ -345,6 +348,9 @@ static void low_level_init(struct netif *netif)
 
     // 诊断：检查 DMA 和 MAC 状态
     printf("[ETH] === Diagnostic Info ===\r\n");
+    printf("[ETH] RxBuildDescCnt: %lu (should be %d)\r\n",
+           (unsigned long)heth.RxDescList.RxBuildDescCnt, ETH_RX_DESC_CNT);
+    printf("[ETH] RxBuildDescIdx: %lu\r\n", (unsigned long)heth.RxDescList.RxBuildDescIdx);
     printf("[ETH] DMAOMR: 0x%08lX\r\n", (unsigned long)heth.Instance->DMAOMR);
     printf("[ETH] DMASR:  0x%08lX\r\n", (unsigned long)heth.Instance->DMASR);
     printf("[ETH] DMAIER: 0x%08lX\r\n", (unsigned long)heth.Instance->DMAIER);
