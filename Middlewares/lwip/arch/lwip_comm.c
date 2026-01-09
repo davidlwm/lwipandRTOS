@@ -19,6 +19,7 @@
 #include "ethernetif.h"
 #include "lwip/timeouts.h"
 #include "lwip/tcpip.h"
+#include "tcp_echo_server.h"
 #include <stdio.h>
 #include <string.h>
 #include "FreeRTOS.h"
@@ -400,14 +401,13 @@ void lwip_link_thread( void * argument )
         if (heartbeat_counter >= 50)
         {
             heartbeat_counter = 0;
-            printf("[HEARTBEAT] Link: %s | IP: %d.%d.%d.%d | RX: %u | TX: %u\r\n",
+            printf("[HEARTBEAT] Link: %s | IP: %d.%d.%d.%d | Port: %d\r\n",
                    g_lwipdev.link_status ? "UP" : "DOWN",
                    ip4_addr1(ip_2_ip4(&netif->ip_addr)),
                    ip4_addr2(ip_2_ip4(&netif->ip_addr)),
                    ip4_addr3(ip_2_ip4(&netif->ip_addr)),
                    ip4_addr4(ip_2_ip4(&netif->ip_addr)),
-                   netif->input_cnt,  /* Packets received */
-                   netif->output_cnt  /* Packets sent */
+                   ECHO_SERVER_PORT
             );
         }
 

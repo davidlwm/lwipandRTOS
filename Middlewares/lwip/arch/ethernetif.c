@@ -147,7 +147,7 @@ low_level_output(struct netif *netif, struct pbuf *p)
 {
     err_t errval;
     struct pbuf *q;
-    
+
     uint8_t *buffer = (uint8_t *)(g_eth_handler.TxDesc->Buffer1Addr);
     __IO ETH_DMADescTypeDef *DmaTxDesc;
     uint32_t framelength = 0;
@@ -161,8 +161,8 @@ low_level_output(struct netif *netif, struct pbuf *p)
 #if ETH_PAD_SIZE
   pbuf_remove_header(p, ETH_PAD_SIZE); /* drop the padding word */
 #endif
-    
-    /*pbufпҪ͵*/
+
+    /*pbuf中要发送的*/
     for (q = p;q != NULL;q = q->next)
     {
         /*жϴ˷ǷЧжϴ˷Ƿ̫DMA*/
@@ -202,8 +202,12 @@ low_level_output(struct netif *netif, struct pbuf *p)
         framelength = framelength+byteslefttocopy;
     }
     
-    /*Ҫ͵ݶŽTx BufferԺͿɷʹ֡*/
+    /*要发送的数据都放进Tx Buffer以后和发送完帧*/
     HAL_ETH_TransmitFrame(&g_eth_handler,framelength);
+
+    /* Debug: Print packet sent */
+    printf("[TX] Frame sent, len=%u bytes\r\n", framelength);
+
     errval = ERR_OK;
 error:            
     /*ͻ磬һͻTxDMA״̬*/
@@ -243,10 +247,13 @@ low_level_input(struct netif *netif)
     uint32_t byteslefttocopy = 0;
     uint32_t i = 0;
   
-    if (HAL_ETH_GetReceivedFrame(&g_eth_handler) != HAL_OK)  /*жǷյ*/
+    if (HAL_ETH_GetReceivedFrame(&g_eth_handler) != HAL_OK)  /*判断是否收到*/
     return NULL;
-    
-    len = g_eth_handler.RxFrameInfos.length;                /*ȡյ̫֡*/
+
+    len = g_eth_handler.RxFrameInfos.length;                /*获取收到的太帧*/
+
+    /* Debug: Print packet received */
+    printf("[RX] Frame received, len=%u bytes\r\n", len);
     
 #if ETH_PAD_SIZE
   len += ETH_PAD_SIZE; /* allow room for Ethernet padding */
@@ -254,10 +261,11 @@ low_level_input(struct netif *netif)
     
     buffer = (uint8_t *)g_eth_handler.RxFrameInfos.buffer;  /*ȡյ̫֡buffer*/
   
-    p = pbuf_alloc(PBUF_RAW,len,PBUF_POOL);     /*pbuf*/
-    
-    if (p != NULL)                                        /*pbufɹ*/
+    p = pbuf_alloc(PBUF_RAW,len,PBUF_POOL);     /*分配pbuf*/
+
+    if (p != NULL)                                        /*pbuf成功*/
     {
+        /* Debug: Pbuf allocated successfully */
         dmarxdesc = g_eth_handler.RxFrameInfos.FSRxDesc;    /*ȡеĵһ*/
         bufferoffset = 0;
         
@@ -287,7 +295,8 @@ low_level_input(struct netif *netif)
     }
     else
     {
-        /* drop packet();  бд*/
+        /* drop packet();  并写*/
+        printf("[RX] ERROR: pbuf_alloc FAILED for %u bytes\r\n", len);
         LINK_STATS_INC(link.memerr);
         LINK_STATS_INC(link.drop);
         MIB2_STATS_NETIF_INC(netif, ifindiscards);
