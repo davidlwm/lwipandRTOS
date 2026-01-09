@@ -288,29 +288,36 @@ static void low_level_init(struct netif *netif)
     else
     {
       printf("[ETH] DEBUG: Entering switch with state=%ld\r\n", PHYLinkState);
+      printf("[ETH] DEBUG: LAN8742_STATUS_10MBITS_HALFDUPLEX = %d\r\n", LAN8742_STATUS_10MBITS_HALFDUPLEX);
       switch (PHYLinkState)
       {
       case LAN8742_STATUS_100MBITS_FULLDUPLEX:
+        printf("[ETH] DEBUG: Matched 100M FD\r\n");
         duplex = ETH_FULLDUPLEX_MODE;
         speed = ETH_SPEED_100M;
         break;
       case LAN8742_STATUS_100MBITS_HALFDUPLEX:
+        printf("[ETH] DEBUG: Matched 100M HD\r\n");
         duplex = ETH_HALFDUPLEX_MODE;
         speed = ETH_SPEED_100M;
         break;
       case LAN8742_STATUS_10MBITS_FULLDUPLEX:
+        printf("[ETH] DEBUG: Matched 10M FD\r\n");
         duplex = ETH_FULLDUPLEX_MODE;
         speed = ETH_SPEED_10M;
         break;
       case LAN8742_STATUS_10MBITS_HALFDUPLEX:
+        printf("[ETH] DEBUG: Matched 10M HD\r\n");
         duplex = ETH_HALFDUPLEX_MODE;
         speed = ETH_SPEED_10M;
         break;
       default:
+        printf("[ETH] DEBUG: Matched default case\r\n");
         duplex = ETH_FULLDUPLEX_MODE;
         speed = ETH_SPEED_100M;
         break;
       }
+      printf("[ETH] DEBUG: After switch - speed=%lu, duplex=%lu\r\n", speed, duplex);
 
     /* Get MAC Config MAC */
     HAL_ETH_GetMACConfig(&heth, &MACConf);

@@ -180,7 +180,11 @@ void TIM1_UP_TIM10_IRQHandler(void)
 void ETH_IRQHandler(void)
 {
   /* USER CODE BEGIN ETH_IRQn 0 */
-
+  static uint32_t irq_count = 0;
+  irq_count++;
+  if (irq_count <= 10) {
+    printf("[ETH_IRQ] Interrupt #%lu\r\n", irq_count);
+  }
   /* USER CODE END ETH_IRQn 0 */
   HAL_ETH_IRQHandler(&heth);
   /* USER CODE BEGIN ETH_IRQn 1 */
